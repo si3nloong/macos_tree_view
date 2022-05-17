@@ -1,4 +1,3 @@
-// ignore: unused_import
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -62,15 +61,15 @@ class Node<T> with _$Node<T> {
   factory Node.fromJson(Map<String, Object?> json) => _$NodeFromJson<T>(json);
 
   /// Creates a [Node] from a string value. It generates a unique key.
-  // static Node<T> fromLabel<T>(String label, {T data}) {
-  //   final String key = GlobalKey().toString();
-  //   return Node<T>(
-  //     key: '${key}_$label',
-  //     label: label,
-  //     children: [],
-  //      data: data
-  //   );
-  // }
+  static Node<T> fromLabel<T>(String label, {T? data, Key? key}) {
+    final String key = GlobalKey().toString();
+    return Node<T>(
+      key: '${key}_$label',
+      label: label,
+      children: [],
+      data: data,
+    );
+  }
 
   /// Whether this object has children [Node].
   bool get isParent => children.isNotEmpty;

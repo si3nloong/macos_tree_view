@@ -121,7 +121,6 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
       child: Container(
         width: _width,
         height: _height,
-        decoration: BoxDecoration(border: Border.all()),
         alignment: AlignmentDirectional.centerEnd,
         // color: Colors.orange,
         child: Center(
@@ -141,6 +140,11 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   }
 
   Widget _buildLabel() {
+    final builder = TreeView.of<T>(context).nodeBuilder;
+    if (builder != null) {
+      return builder(context, widget.node);
+    }
+
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: Text(
@@ -182,16 +186,9 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
                 if (boxSize <= 0)
                   const SizedBox.shrink()
                 else
-                  Container(
-                      width: boxSize,
-                      decoration: const BoxDecoration(color: Colors.red)),
-
+                  Container(width: boxSize),
                 _buildExpander(),
-                // if (widget.node.icon != null) Icon(widget.node.icon, size: 18),
-                // Text(widget.node.label),
-                Expanded(
-                  child: _buildLabel(),
-                ),
+                Expanded(child: _buildLabel()),
               ],
             ),
           ),
