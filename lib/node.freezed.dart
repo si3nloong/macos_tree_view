@@ -203,7 +203,7 @@ class __$$_NodeCopyWithImpl<T, $Res> extends _$NodeCopyWithImpl<T, $Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$_Node<T> extends _Node<T> with DiagnosticableTreeMixin {
+class _$_Node<T> extends _Node<T> {
   const _$_Node(
       {required this.key,
       required this.label,
@@ -264,26 +264,6 @@ class _$_Node<T> extends _Node<T> with DiagnosticableTreeMixin {
   List<Node<T>> get children {
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_children);
-  }
-
-  @override
-  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Node<$T>(key: $key, label: $label, icon: $icon, iconColor: $iconColor, selectedIconColor: $selectedIconColor, expanded: $expanded, data: $data, children: $children)';
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DiagnosticsProperty('type', 'Node<$T>'))
-      ..add(DiagnosticsProperty('key', key))
-      ..add(DiagnosticsProperty('label', label))
-      ..add(DiagnosticsProperty('icon', icon))
-      ..add(DiagnosticsProperty('iconColor', iconColor))
-      ..add(DiagnosticsProperty('selectedIconColor', selectedIconColor))
-      ..add(DiagnosticsProperty('expanded', expanded))
-      ..add(DiagnosticsProperty('data', data))
-      ..add(DiagnosticsProperty('children', children));
   }
 
   @override

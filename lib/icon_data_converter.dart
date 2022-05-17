@@ -1,16 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-class IconDataOrNullConverter implements JsonConverter<IconData?, dynamic> {
+class IconDataOrNullConverter implements JsonConverter<IconData?, int?> {
   const IconDataOrNullConverter();
 
   @override
-  IconData? fromJson(dynamic json) {
+  IconData? fromJson(int? json) {
     if (json == null) {
-      return null;
-    }
-
-    if (json is! int) {
       return null;
     }
 
@@ -18,7 +14,7 @@ class IconDataOrNullConverter implements JsonConverter<IconData?, dynamic> {
   }
 
   @override
-  dynamic toJson(IconData? object) {
+  int? toJson(IconData? object) {
     if (object == null) {
       return null;
     }

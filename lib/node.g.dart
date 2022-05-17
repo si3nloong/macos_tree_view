@@ -9,7 +9,7 @@ part of 'node.dart';
 _$_Node<T> _$$_NodeFromJson<T>(Map<String, dynamic> json) => _$_Node<T>(
       key: json['key'] as String,
       label: json['label'] as String,
-      icon: const IconDataOrNullConverter().fromJson(json['icon']),
+      icon: const IconDataOrNullConverter().fromJson(json['icon'] as int?),
       iconColor:
           const ColorOrNullConverter().fromJson(json['iconColor'] as String?),
       selectedIconColor: const ColorOrNullConverter()

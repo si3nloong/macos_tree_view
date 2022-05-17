@@ -1,7 +1,6 @@
 // ignore: unused_import
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -72,71 +71,6 @@ class Node<T> with _$Node<T> {
   //      data: data
   //   );
   // }
-
-  /// Creates a [Node] from a Map<String, dynamic> map. The map
-  /// should contain a "label" value. If the key value is
-  /// missing, it generates a unique key.
-  /// If the expanded value, if present, can be any 'truthful'
-  /// value. Excepted values include: 1, yes, true and their
-  /// associated string values.
-  // static Node<T> fromMap<T>(Map<String, dynamic> map) {
-  //   final String key = map['key'] ?? GlobalKey().toString();
-  //   final String label = map['label'];
-  //   final data = map['data'];
-  //   List<Node> children = [];
-  //   // if (map['icon'] != null) {
-  //   // int _iconData = int.parse(map['icon']);
-  //   // if (map['icon'].runtimeType == String) {
-  //   //   _iconData = int.parse(map['icon']);
-  //   // } else if (map['icon'].runtimeType == double) {
-  //   //   _iconData = (map['icon'] as double).toInt();
-  //   // } else {
-  //   //   _iconData = map['icon'];
-  //   // }
-  //   // _icon = const IconData(_iconData);
-  //   // }
-  //   if (map['children'] != null) {
-  //     final List<Map<String, dynamic>> childrenMap = List.from(map['children']);
-  //     children = childrenMap
-  //         .map((Map<String, dynamic> child) => Node.fromMap(child))
-  //         .toList();
-  //   }
-  //   return Node<T>(
-  //     key: key,
-  //     label: label,
-  //     data: data,
-  //     // FIXME:
-  //     // expanded: Utilities.truthful(map['expanded']),
-  //     // parent: Utilities.truthful(map['parent']),
-  //     children: children,
-  //   );
-  // }
-
-  /// Creates a copy of this object but with the given fields
-  /// replaced with the new values.
-  // @override
-  // Node<T> copyWith({
-  //   String? key,
-  //   String? label,
-  //   List<Node<T>>? children,
-  //   bool? expanded,
-  //   bool? parent,
-  //   IconData? icon,
-  //   Color? iconColor,
-  //   Color? selectedIconColor,
-  //   T? data,
-  // }) =>
-  //     Node<T>(
-  //       key: key ?? this.key,
-  //       label: label ?? this.label,
-  //       icon: icon ?? this.icon,
-  //       iconColor: iconColor ?? this.iconColor,
-  //       selectedIconColor: selectedIconColor ?? this.selectedIconColor,
-  //       expanded: expanded ?? this.expanded,
-  //       parent: parent ?? this.parent,
-  //       children: children ?? this.children,
-  //       data: data ?? this.data,
-  //     );
 
   /// Whether this object has children [Node].
   bool get isParent => children.isNotEmpty;
