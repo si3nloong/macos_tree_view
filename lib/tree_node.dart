@@ -165,7 +165,6 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
 
   @override
   Widget build(BuildContext context) {
-    print('build ${widget.node.key}');
     final theme = Theme.of(context);
     final boxSize = widget.level * TreeView.of<T>(context).widget.indent;
 
