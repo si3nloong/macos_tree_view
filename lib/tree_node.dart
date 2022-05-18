@@ -215,14 +215,17 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
             itemCount: widget.node.children.length,
             itemBuilder: (context, index) {
               final child = widget.node.children[index];
+              final selected =
+                  TreeView.of<T>(context).selectedNodes.contains(child.key);
 
               return TreeNode<T>(
                 key: child.key,
                 node: child,
+                selected: selected,
+                level: widget.level + 1,
                 onTap: widget.onTap,
                 onSecondaryTapUp: widget.onSecondaryTapUp,
                 onExpansionChanged: widget.onExpansionChanged,
-                level: widget.level + 1,
               );
             },
           ),
