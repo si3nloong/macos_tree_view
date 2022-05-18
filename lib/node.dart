@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'color_converter.dart';
 import 'generic_converter.dart';
 import 'icon_data_converter.dart';
+import 'key_converter.dart';
 import 'node_converter.dart';
 
 part 'node.freezed.dart';
@@ -25,7 +24,7 @@ part 'node.g.dart';
 class Node<T> with _$Node<T> {
   const factory Node({
     /// The unique string that identifies this object.
-    required String key,
+    @KeyOrNullConverter() required Key key,
 
     /// The string value that is displayed on the [TreeNode].
     required String label,
@@ -61,13 +60,14 @@ class Node<T> with _$Node<T> {
   factory Node.fromJson(Map<String, Object?> json) => _$NodeFromJson<T>(json);
 
   /// Creates a [Node] from a string value. It generates a unique key.
-  static Node<T> fromLabel<T>(String label, {T? data, Key? key}) {
-    final String key = GlobalKey().toString();
+  static Node<T> fromLabel<T>(String label,
+      {Key? key, T? data, IconData? icon}) {
     return Node<T>(
-      key: '${key}_$label',
+      key: key ?? GlobalKey(),
       label: label,
-      children: [],
       data: data,
+      icon: icon,
+      children: [],
     );
   }
 
@@ -79,9 +79,4 @@ class Node<T> with _$Node<T> {
 
   /// Whether this object has data associated with it.
   bool get hasData => data != null;
-
-  @override
-  String toString() {
-    return jsonEncode(this);
-  }
 }

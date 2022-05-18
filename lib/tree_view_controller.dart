@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'node.dart';
+import 'tree_view.dart';
 
 /// Defines the insertion mode adding a new [Node] to the [TreeView].
 enum InsertMode {
@@ -11,55 +12,54 @@ enum InsertMode {
   insert,
 }
 
-class TreeViewValue<T> {
-  final List<Node<T>> children;
-  final String? selectedKey;
-
-  const TreeViewValue({
-    this.children = const [],
-    this.selectedKey,
-  });
-
-  TreeViewValue<T> copyWith({
-    List<Node<T>>? children,
-    String? selectedKey,
-  }) {
-    return TreeViewValue(
-      children: children ?? this.children,
-      selectedKey: selectedKey ?? this.selectedKey,
-    );
-  }
-}
-
+/// The controller for [TreeView].
 class TreeViewController<T> extends ChangeNotifier {
-  TreeViewController({List<Node<T>>? nodes}) : super() {
-    _nodes = nodes ?? [];
-  }
+  final SelectionMode selectionMode;
+
+  TreeViewController({
+    List<Node<T>>? nodes,
+    Set<Key>? initialNodes,
+    this.selectionMode = SelectionMode.single,
+  })  : _nodes = nodes ?? [],
+        _selectedNodes = initialNodes ?? {},
+        super();
 
   /// The key of the select node in the [TreeView].
-  Key? _selected;
-  Key? get selected => _selected;
+  Set<Key> _selectedNodes;
+  Set<Key> get selectedNodes => _selectedNodes;
+  set selectedNodes(Set<Key> value) {
+    _selectedNodes = value;
+    notifyListeners();
+  }
 
   /// The data for the [TreeView].
-  List<Node<T>> _nodes = [];
+  List<Node<T>> _nodes;
   List<Node<T>> get nodes => _nodes;
 
   /// Creates a copy of this controller but with the given fields
   /// replaced with the new values.
-  // TreeViewController copyWith<T>(
-  //     {List<Node<T>>? children, String? selectedKey}) {
-  //   return TreeViewController(
-  //     children: children ?? this.children,
-  //     selectedKey: selectedKey ?? this.selectedKey,
-  //   );
-  // }
+  ///
+  /// ```dart
+  /// controller = TreeViewController<String>();
+  ///
+  /// setState(() {
+  ///   controller.copyWith();
+  /// });
+  /// ```
+  TreeViewController<T> copyWith(
+      {List<Node<T>>? nodes, Set<Key>? initialNodes}) {
+    return TreeViewController<T>(
+      nodes: nodes ?? _nodes,
+      initialNodes: initialNodes ?? _selectedNodes,
+    );
+  }
 
   /// Loads this controller with data from a JSON String
   /// This method expects the user to properly update the state
   ///
   /// ```dart
-  /// setState((){
-  ///   controller = controller.loadJSON(json: jsonString);
+  /// setState(() {
+  ///   TreeViewController.loadFromJson(json: jsonString);
   /// });
   /// ```
   static TreeViewController<T> loadFromJson<T>({String json = '[]'}) {
@@ -254,7 +254,7 @@ class TreeViewController<T> extends ChangeNotifier {
   // }
 
   /// Gets the node that has a key value equal to the specified key.
-  Node<T>? findNode(String key, {Node<T>? parent}) {
+  Node<T>? findNode(Key key, {Node<T>? parent}) {
     Node<T>? found;
     final List<Node<T>> children = parent == null ? _nodes : parent.children;
     final iter = children.iterator;
@@ -275,66 +275,106 @@ class TreeViewController<T> extends ChangeNotifier {
     return found;
   }
 
+  /// Gets the parent of the node identified by specified key.
+  Node<T>? findParent(Key key, {Node<T>? parent}) {
+    Node<T>? found;
+    final List<Node<T>> children = parent == null ? _nodes : parent.children;
+    final iter = children.iterator;
+    while (iter.moveNext()) {
+      final child = iter.current;
+      if (child.key == key) {
+        found = parent ?? child;
+        break;
+      } else {
+        if (child.isParent) {
+          found = findParent(key, parent: child);
+          if (found != null) {
+            break;
+          }
+        }
+      }
+    }
+    return found;
+  }
+
+  /// Adds a new node to an existing node identified by specified key. It optionally
+  /// accepts an [InsertMode] and index. If no [InsertMode] is specified,
+  /// it appends the new node as a child at the end. This method returns
+  /// a new list with the added node.
+  void addNode(
+    Key key,
+    Node<T> newNode, {
+    Node<T>? parent,
+    int? index,
+    InsertMode mode = InsertMode.append,
+  }) {
+    _nodes =
+        _insertNode(key, newNode, parent: parent, index: index, mode: mode);
+  }
+
+  void touchNode(Key key) {
+    if (selectionMode == SelectionMode.none) {
+      return;
+    }
+
+    final Node<T>? node = findNode(key);
+    if (node == null) {
+      return;
+    }
+
+    if (selectionMode == SelectionMode.single) {
+      _selectedNodes = {key};
+    } else {
+      final list = _selectedNodes.toSet();
+      list.add(key);
+      _selectedNodes = list;
+    }
+    notifyListeners();
+  }
+
+  /// Toggles an existing node identified by specified key. This method
+  /// returns a new list with the specified node toggled.
+  void toggleNode(Key key, {Node<T>? parent}) {
+    final Node<T>? node = findNode(key, parent: parent);
+    if (node == null) {
+      return;
+    }
+    _nodes = _updateNode(key, node.copyWith(expanded: !node.expanded));
+    notifyListeners();
+  }
+
   /// Expands all node that are children of the parent node parameter. If no parent is passed, uses the root node as the parent.
-  // List<Node> expandAll({Node? parent}) {
-  //   final List<Node> children = [];
-  //   final Iterator iter =
-  //       parent == null ? value.children.iterator : parent.children.iterator;
-  //   while (iter.moveNext()) {
-  //     final Node child = iter.current;
-  //     if (child.isParent) {
-  //       children.add(child.copyWith(
-  //         expanded: true,
-  //         children: expandAll(parent: child),
-  //       ));
-  //     } else {
-  //       children.add(child);
-  //     }
-  //   }
-  //   return children;
-  // }
+  void expandAll({Node<T>? parent}) {
+    _nodes = _mapDescendants(
+        parent: parent, mapper: (v) => v.copyWith(expanded: true));
+    notifyListeners();
+  }
 
   /// Collapses all node that are children of the parent node parameter. If no parent is passed, uses the root node as the parent.
-  // List<Node> collapseAll({Node? parent}) {
-  //   final List<Node> children = [];
-  //   final Iterator iter =
-  //       parent == null ? value.children.iterator : parent.children.iterator;
-  //   while (iter.moveNext()) {
-  //     final Node child = iter.current;
-  //     if (child.isParent) {
-  //       children.add(child.copyWith(
-  //         expanded: false,
-  //         children: collapseAll(parent: child),
-  //       ));
-  //     } else {
-  //       children.add(child);
-  //     }
-  //   }
-  //   return children;
-  // }
+  void collapseAll({Node<T>? parent}) {
+    _nodes = _mapDescendants(
+        parent: parent, mapper: (v) => v.copyWith(expanded: false));
+    notifyListeners();
+  }
 
-  /// Gets the parent of the node identified by specified key.
-  // Node<T>? getParent(String key, {Node<T>? parent}) {
-  //   Node<T>? found;
-  //   final List<Node<T>> children =
-  //       parent == null ? value.children : parent.children;
-  //   final iter = children.iterator;
-  //   while (iter.moveNext()) {
-  //     final child = iter.current;
-  //     if (child.key == key) {
-  //       found = parent ?? child;
-  //       break;
-  //     } else {
-  //       if (child.isParent) {
-  //         found = getParent(key, parent: child);
-  //         if (found != null) {
-  //           break;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return found;
-  // }
+  List<Node<T>> _mapDescendants(
+      {Node<T>? parent, required Node<T> Function(Node<T>) mapper}) {
+    final List<Node<T>> children = [];
+    final Iterator<Node<T>> iter =
+        parent == null ? _nodes.iterator : parent.children.iterator;
+    while (iter.moveNext()) {
+      final Node<T> child = iter.current;
+      if (child.isParent) {
+        children.add(child.copyWith(
+          expanded: true,
+          children: _mapDescendants(parent: child, mapper: mapper),
+        ));
+      } else {
+        children.add(child);
+      }
+    }
+    return children;
+  }
 
   /// Expands a node and all of the node's ancestors so that the node is
   /// visible without the need to manually expand each node.
@@ -388,85 +428,61 @@ class TreeViewController<T> extends ChangeNotifier {
   //   return value.children;
   // }
 
-  /// Adds a new node to an existing node identified by specified key. It optionally
-  /// accepts an [InsertMode] and index. If no [InsertMode] is specified,
-  /// it appends the new node as a child at the end. This method returns
-  /// a new list with the added node.
-  // List<Node> addNode<T>(
-  //   String key,
-  //   Node<T> newNode, {
-  //   Node? parent,
-  //   int? index,
-  //   InsertMode mode = InsertMode.append,
-  // }) {
-  //   final List<Node> children =
-  //       parent == null ? value.children : parent.children;
-  //   return children.map((Node child) {
-  //     if (child.key == key) {
-  //       final List<Node> children = child.children.toList(growable: true);
-  //       if (mode == InsertMode.prepend) {
-  //         children.insert(0, newNode);
-  //       } else if (mode == InsertMode.insert) {
-  //         children.insert(index ?? children.length, newNode);
-  //       } else {
-  //         children.add(newNode);
-  //       }
-  //       return child.copyWith(children: children);
-  //     } else {
-  //       return child.copyWith(
-  //         children: addNode<T>(
-  //           key,
-  //           newNode,
-  //           parent: child,
-  //           mode: mode,
-  //           index: index,
-  //         ),
-  //       );
-  //     }
-  //   }).toList();
-  // }
+  List<Node<T>> _insertNode(
+    Key key,
+    Node<T> newNode, {
+    Node<T>? parent,
+    int? index,
+    InsertMode mode = InsertMode.append,
+  }) {
+    final List<Node<T>> children = parent == null ? _nodes : parent.children;
+    return children.map((Node<T> child) {
+      if (child.key == key) {
+        final List<Node<T>> children = child.children.toList(growable: true);
+        if (mode == InsertMode.prepend) {
+          children.insert(0, newNode);
+        } else if (mode == InsertMode.insert) {
+          children.insert(index ?? children.length, newNode);
+        } else {
+          children.add(newNode);
+        }
+        return child.copyWith(children: children);
+      } else {
+        return child.copyWith(
+          children: _insertNode(
+            key,
+            newNode,
+            parent: child,
+            mode: mode,
+            index: index,
+          ),
+        );
+      }
+    }).toList();
+  }
 
   /// Updates an existing node identified by specified key. This method
   /// returns a new list with the updated node.
-  // List<Node> updateNode<T>(String key, Node<T> newNode, {Node? parent}) {
-  //   final List<Node> children =
-  //       parent == null ? value.children : parent.children;
-  //   return children.map((Node child) {
-  //     if (child.key == key) {
-  //       return newNode;
-  //     }
+  List<Node<T>> _updateNode(Key key, Node<T> newNode, {Node<T>? parent}) {
+    final List<Node<T>> children = parent == null ? _nodes : parent.children;
+    return children.map((Node<T> child) {
+      if (child.key == key) {
+        return newNode;
+      }
 
-  //     if (child.isParent) {
-  //       return child.copyWith(
-  //         children: updateNode<T>(
-  //           key,
-  //           newNode,
-  //           parent: child,
-  //         ),
-  //       );
-  //     }
+      if (child.isParent) {
+        return child.copyWith(
+          children: _updateNode(
+            key,
+            newNode,
+            parent: child,
+          ),
+        );
+      }
 
-  //     return child;
-  //   }).toList();
-  // }
-
-  /// Toggles an existing node identified by specified key. This method
-  /// returns a new list with the specified node toggled.
-  // List<Node> toggleNode<T>(String key, {Node? parent}) {
-  //   Node<T>? _node = getNode<T>(key, parent: parent);
-  //   print('Node => $_node');
-  //   return updateNode<T>(key, _node!.copyWith(expanded: !_node.expanded));
-  // }
-  // void toggleNode(String key, {Node<T>? parent}) {
-  //   final Node<T>? node = getNode(key, parent: parent);
-  //   if (node == null) {
-  //     return;
-  //   }
-
-  //   node.expanded = !node.expanded;
-  //   notifyListeners();
-  //   // return updateNode<T>(key, _node!.copyWith(expanded: !_node.expanded));
-  // }
+      return child;
+    }).toList();
+  }
 
   /// Deletes an existing node identified by specified key. This method
   /// returns a new list with the specified node removed.
@@ -489,19 +505,11 @@ class TreeViewController<T> extends ChangeNotifier {
   //   return _filteredChildren;
   // }
 
-  /// Get the current selected node. Returns null if there is no selectedKey
-  // Node<T>? get selectedNode {
-  //   if (value.selectedKey == null) {
-  //     return null;
-  //   }
-  //   return value.selectedKey!.isEmpty ? null : getNode(value.selectedKey!);
-  // }
-
   // /// Map representation of this object
   // List<Map<String, dynamic>> get asMap {
   //   return value.children.map((Node child) => child.asMap).toList();
   // }
 
-  // @override
-  // String toString() => jsonEncode(asMap);
+  @override
+  String toString() => 'TreeViewController<$T>()';
 }

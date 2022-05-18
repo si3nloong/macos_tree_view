@@ -21,7 +21,8 @@ Node<T> _$NodeFromJson<T>(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Node<T> {
   /// The unique string that identifies this object.
-  String get key => throw _privateConstructorUsedError;
+  @KeyOrNullConverter()
+  Key get key => throw _privateConstructorUsedError;
 
   /// The string value that is displayed on the [TreeNode].
   String get label => throw _privateConstructorUsedError;
@@ -62,7 +63,7 @@ abstract class $NodeCopyWith<T, $Res> {
   factory $NodeCopyWith(Node<T> value, $Res Function(Node<T>) then) =
       _$NodeCopyWithImpl<T, $Res>;
   $Res call(
-      {String key,
+      {@KeyOrNullConverter() Key key,
       String label,
       @IconDataOrNullConverter() IconData? icon,
       @ColorOrNullConverter() Color? iconColor,
@@ -95,7 +96,7 @@ class _$NodeCopyWithImpl<T, $Res> implements $NodeCopyWith<T, $Res> {
       key: key == freezed
           ? _value.key
           : key // ignore: cast_nullable_to_non_nullable
-              as String,
+              as Key,
       label: label == freezed
           ? _value.label
           : label // ignore: cast_nullable_to_non_nullable
@@ -134,7 +135,7 @@ abstract class _$$_NodeCopyWith<T, $Res> implements $NodeCopyWith<T, $Res> {
       __$$_NodeCopyWithImpl<T, $Res>;
   @override
   $Res call(
-      {String key,
+      {@KeyOrNullConverter() Key key,
       String label,
       @IconDataOrNullConverter() IconData? icon,
       @ColorOrNullConverter() Color? iconColor,
@@ -168,7 +169,7 @@ class __$$_NodeCopyWithImpl<T, $Res> extends _$NodeCopyWithImpl<T, $Res>
       key: key == freezed
           ? _value.key
           : key // ignore: cast_nullable_to_non_nullable
-              as String,
+              as Key,
       label: label == freezed
           ? _value.label
           : label // ignore: cast_nullable_to_non_nullable
@@ -205,7 +206,7 @@ class __$$_NodeCopyWithImpl<T, $Res> extends _$NodeCopyWithImpl<T, $Res>
 @JsonSerializable()
 class _$_Node<T> extends _Node<T> {
   const _$_Node(
-      {required this.key,
+      {@KeyOrNullConverter() required this.key,
       required this.label,
       @IconDataOrNullConverter() this.icon,
       @ColorOrNullConverter() this.iconColor,
@@ -220,7 +221,8 @@ class _$_Node<T> extends _Node<T> {
 
   /// The unique string that identifies this object.
   @override
-  final String key;
+  @KeyOrNullConverter()
+  final Key key;
 
   /// The string value that is displayed on the [TreeNode].
   @override
@@ -267,6 +269,11 @@ class _$_Node<T> extends _Node<T> {
   }
 
   @override
+  String toString() {
+    return 'Node<$T>(key: $key, label: $label, icon: $icon, iconColor: $iconColor, selectedIconColor: $selectedIconColor, expanded: $expanded, data: $data, children: $children)';
+  }
+
+  @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
@@ -308,7 +315,7 @@ class _$_Node<T> extends _Node<T> {
 
 abstract class _Node<T> extends Node<T> {
   const factory _Node(
-      {required final String key,
+      {@KeyOrNullConverter() required final Key key,
       required final String label,
       @IconDataOrNullConverter() final IconData? icon,
       @ColorOrNullConverter() final Color? iconColor,
@@ -323,7 +330,8 @@ abstract class _Node<T> extends Node<T> {
   @override
 
   /// The unique string that identifies this object.
-  String get key => throw _privateConstructorUsedError;
+  @KeyOrNullConverter()
+  Key get key => throw _privateConstructorUsedError;
   @override
 
   /// The string value that is displayed on the [TreeNode].

@@ -5,16 +5,32 @@ import 'package:flutter/material.dart';
 import 'macos_tree_view.dart';
 
 class TreeNode<T> extends StatefulWidget {
-  /// The node object used to display the widget state
+  /// The node object used to display the widget state.
   final Node<T> node;
 
-  /// The node nested level
+  /// The node nested level.
   final int level;
+
+  /// Determine the node is selected or not.
+  final bool selected;
+
+  /// The tap function.
+  final void Function(Node<T> node)? onTap;
+
+  /// The secondary tap up function.
+  final void Function(Node<T> node, TapUpDetails details)? onSecondaryTapUp;
+
+  /// The expansion function.
+  final void Function(Node<T> node, bool expanded)? onExpansionChanged;
 
   const TreeNode({
     Key? key,
     required this.node,
+    this.selected = false,
     this.level = 0,
+    this.onTap,
+    this.onSecondaryTapUp,
+    this.onExpansionChanged,
   }) : super(key: key);
 
   @override
@@ -29,7 +45,7 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   late AnimationController _controller;
   late Animation<double> _animation;
 
-  bool _isExpanded = false;
+  late bool _isExpanded;
 
   final double _height = 25;
   final double _width = 20;
@@ -39,17 +55,12 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
     super.initState();
 
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
+        duration: const Duration(milliseconds: 200), vsync: this);
     _animation = _controller.drive(_easeInTween);
     _isExpanded = widget.node.expanded;
     if (_isExpanded) {
       _controller.value = 1.0;
     }
-    // final TreeView<T>? treeView = TreeView.of<T>(context);
-    // assert(treeView != null, 'TreeView must exist in context');
-    // _isSelected = widget.node.key == _treeView!.controller.selectedKey;
     _controller.addStatusListener((status) {
       switch (status) {
         case AnimationStatus.completed:
@@ -78,12 +89,6 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   //   // _controller.duration = _treeView!.theme.expandSpeed;
   // }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   // @override
   // void didUpdateWidget(TreeNode oldWidget) {
   //   // print(oldWidget);
@@ -105,6 +110,12 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   //   // super.didUpdateWidget(oldWidget);
   // }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Widget _buildExpander() {
     return GestureDetector(
       onTap: () {
@@ -114,15 +125,12 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
           _controller.forward();
         }
         _isExpanded = !_isExpanded;
-        TreeView.of<T>(context)
-            .onExpansionChanged
-            ?.call(widget.node.key, !_isExpanded);
+        widget.onExpansionChanged?.call(widget.node, _isExpanded);
       },
       child: Container(
         width: _width,
         height: _height,
         alignment: AlignmentDirectional.centerEnd,
-        // color: Colors.orange,
         child: Center(
           child: AnimatedBuilder(
             animation: _controller,
@@ -140,7 +148,7 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   }
 
   Widget _buildLabel() {
-    final builder = TreeView.of<T>(context).nodeBuilder;
+    final builder = TreeView.of<T>(context).widget.nodeBuilder;
     if (builder != null) {
       return builder(context, widget.node);
     }
@@ -157,28 +165,27 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
 
   @override
   Widget build(BuildContext context) {
+    print('build ${widget.node.key}');
     final theme = Theme.of(context);
-    final selected =
-        widget.node.key == TreeView.of<T>(context).controller.selected;
-    final boxSize = widget.level * _width;
+    final boxSize = widget.level * TreeView.of<T>(context).widget.indent;
 
     return Column(
+      key: widget.key,
       children: [
         Container(
           height: _height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: selected ? theme.primaryColor.withOpacity(0.65) : null,
+            color:
+                widget.selected ? theme.primaryColor.withOpacity(0.65) : null,
             borderRadius: BorderRadius.circular(5),
           ),
           child: GestureDetector(
             onTap: () {
-              TreeView.of<T>(context).onNodeTap?.call(widget.node.key);
+              widget.onTap?.call(widget.node);
             },
             onSecondaryTapUp: (details) {
-              TreeView.of<T>(context)
-                  .onNodeSecondaryTapUp
-                  ?.call(details, widget.node.key);
+              widget.onSecondaryTapUp?.call(widget.node, details);
             },
             behavior: HitTestBehavior.translucent,
             child: Row(
@@ -211,12 +218,14 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
               final child = widget.node.children[index];
 
               return TreeNode<T>(
-                key: ValueKey(child.key),
+                key: child.key,
                 node: child,
+                onTap: widget.onTap,
+                onSecondaryTapUp: widget.onSecondaryTapUp,
+                onExpansionChanged: widget.onExpansionChanged,
                 level: widget.level + 1,
               );
             },
-            // onReorder: (a, b) {},
           ),
         ),
       ],

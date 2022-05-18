@@ -1,33 +1,45 @@
 import 'package:flutter/material.dart';
 
+import '_debug.dart';
 import 'node.dart';
 import 'tree_node.dart';
 import 'tree_view_controller.dart';
+import 'tree_view_theme.dart';
 
-class TreeView<T> extends StatelessWidget {
+/// Supported node selection behaviors.
+enum SelectionMode {
+  /// Indicates that the tree doesn't allow node selection.
+  none,
+
+  /// Indicates that the tree allows single selection.
+  single,
+
+  /// Indicates that the tree allows multiple selection.
+  multiple,
+}
+
+class TreeView<T> extends StatefulWidget {
   /// The controller for the [TreeView]. It manages the data and selected key.
   late final TreeViewController<T> controller;
 
+  /// The padding of the widget.
   final EdgeInsets? padding;
 
-  /// The key of the selected node;
-  final Key? selected;
-
   /// The tap handler for a node. Passes the node key.
-  final ValueChanged<String>? onNodeTap;
+  final ValueChanged<Key>? onNodeTap;
 
   /// The double tap handler for a node. Passes the node key.
-  final void Function(TapUpDetails, String)? onNodeSecondaryTapUp;
+  final void Function(Key, TapUpDetails)? onNodeSecondaryTapUp;
 
   /// The expand/collapse handler for a node. Passes the node key and the
   /// expansion state.
-  final void Function(String, bool)? onExpansionChanged;
+  final void Function(Key, bool)? onExpansionChanged;
 
   /// Custom builder for nodes. Parameters are the build context and tree node.
   final Widget Function(BuildContext, Node<T>)? nodeBuilder;
 
   /// The theme for [TreeView].
-  // final TreeViewTheme theme;
+  final TreeViewTheme? theme;
 
   /// Determines whether the user can select a parent node. If false,
   /// tapping the parent will expand or collapse the node. If true, the node
@@ -60,115 +72,103 @@ class TreeView<T> extends StatelessWidget {
   /// a single or double tap._
   final bool supportParentDoubleTap;
 
+  /// Indention size.
+  final double indent;
+
+  /// Specifies the empty placeholder widget to render if the tree is currently empty.
+  final Widget? empty;
+
   TreeView({
     Key? key,
     TreeViewController<T>? controller,
-    this.selected,
     this.onNodeTap,
     this.onNodeSecondaryTapUp,
+    this.onExpansionChanged,
     this.padding = EdgeInsets.zero,
     this.physics,
-    this.onExpansionChanged,
     this.allowParentSelect = false,
     this.supportParentDoubleTap = false,
     this.shrinkWrap = false,
+    this.theme = const TreeViewTheme.fallback(),
     this.primary = true,
+    this.indent = 20,
     this.nodeBuilder,
-  })  : controller = controller ?? TreeViewController(),
+    this.empty,
+  })  :
+        // assert(selectionMode == SelectionMode.single && selectedNodes.length < 2),
+        controller = controller ?? TreeViewController(),
+        assert(!debugNodesHaveDuplicateKeys<T>(controller!.nodes)),
         super(key: key);
-  // assert(KeyedSubtree.ensureUniqueKeysForList(widget.children))
 
-  static TreeView<T> of<T>(BuildContext context, {bool build = true}) {
+  @override
+  State<TreeView<T>> createState() => _TreeViewState<T>();
+
+  static _TreeViewState<T> of<T>(BuildContext context, {bool build = true}) {
     return build
         ? context.dependOnInheritedWidgetOfExactType<_TreeViewScope<T>>()!.state
         : context.findAncestorWidgetOfExactType<_TreeViewScope<T>>()!.state;
   }
+}
 
-  // static TreeView<T> of<T>(BuildContext context) {
-  //   final _TreeViewScope<T> scope =
-  //       context.dependOnInheritedWidgetOfExactType<_TreeViewScope<T>>()!;
-  //   return scope.widget;
-  // }
+class _TreeViewState<T> extends State<TreeView<T>> {
+  late TreeViewController<T> _controller;
+
+  List<Node<T>> get nodes => widget.controller.nodes;
+  Set<Key> get selectedNodes => widget.controller.selectedNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller;
+  }
+
+  void _handleTap(Node<T> node) {
+    _controller.touchNode(node.key);
+    widget.onNodeTap?.call(node.key);
+    setState(() {});
+  }
+
+  void _handleSecondaryTapUp(Node<T> node, TapUpDetails details) {
+    widget.onNodeSecondaryTapUp?.call(node.key, details);
+  }
+
+  void _handleExpansionChanged(Node<T> node, bool expanded) {
+    widget.onExpansionChanged?.call(node.key, expanded);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final nodes = controller.nodes.toList();
-
-    return _TreeViewScope(
-      state: this,
-      child: ListView.builder(
-        shrinkWrap: shrinkWrap,
-        padding: padding,
-        primary: primary,
-        physics: physics,
+    Widget child = widget.empty ?? const SizedBox.shrink();
+    if (nodes.isNotEmpty) {
+      child = ListView.builder(
+        shrinkWrap: widget.shrinkWrap,
+        padding: widget.padding,
+        primary: widget.primary,
+        physics: widget.physics,
         itemCount: nodes.length,
         itemBuilder: (context, index) {
           final child = nodes[index];
+          final selected =
+              TreeView.of<T>(context).selectedNodes.contains(child.key);
 
           return TreeNode<T>(
-            key: ValueKey(child.key),
+            key: child.key,
             node: child,
+            selected: selected,
+            onTap: _handleTap,
+            onSecondaryTapUp: _handleSecondaryTapUp,
+            onExpansionChanged: _handleExpansionChanged,
           );
         },
-      ),
-    );
+      );
+    }
+
+    return _TreeViewScope(state: this, child: child);
   }
 }
 
-// class _TreeViewState<T> extends State<TreeView<T>> {
-//   late TreeViewController<T> _controller;
-//   // late List<Widget> _childrenWithKey;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     // _updateTreeViewController();
-//     // _controller.addListener(() {
-//     //   print(_controller.nodes);
-//     // });
-//     // _childrenWithKey = KeyedSubtree.ensureUniqueKeysForList([]);
-//     _controller = widget.controller ?? TreeViewController<T>();
-//   }
-
-//   void _updateTreeViewController() {
-//     // final TreeViewController<T> newController =
-//     //     widget.controller ?? TreeView.of<T>(context);
-//     // if (newController == _controller) {
-//     //   return;
-//     // }
-
-//     // if (_controllerIsValid) {
-//     //   _controller.animation!.removeListener(_handleTabControllerAnimationTick);
-//     // }
-//     // _controller = newController;
-
-//     setState(() {});
-//     // _controller.animation!.addListener(_handleTabControllerAnimationTick);
-//   }
-
-//   @override
-//   void didChangeDependencies() {
-//     super.didChangeDependencies();
-//     _updateTreeViewController();
-//   }
-
-//   @override
-//   void didUpdateWidget(TreeView<T> oldWidget) {
-//     super.didUpdateWidget(oldWidget);
-//     _updateTreeViewController();
-//   }
-
-//   @override
-//   void dispose() {
-//     if (widget.controller == null) {
-//       _controller.dispose();
-//     }
-//     super.dispose();
-//   }
-// }
-
 class _TreeViewScope<T> extends InheritedWidget {
-  final TreeView<T> state;
+  final _TreeViewState<T> state;
 
   const _TreeViewScope({
     Key? key,
