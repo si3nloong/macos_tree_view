@@ -113,8 +113,8 @@ class TreeView<T> extends StatefulWidget {
 class _TreeViewState<T> extends State<TreeView<T>> {
   late TreeViewController<T> _controller;
 
-  List<Node<T>> get nodes => widget.controller.nodes;
-  Set<Key> get selectedNodes => widget.controller.selectedNodes;
+  List<Node<T>> get nodes => _controller.nodes;
+  Set<Key> get selectedNodes => _controller.selectedNodes;
 
   @override
   void initState() {
