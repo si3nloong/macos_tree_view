@@ -123,7 +123,7 @@ class _TreeViewState<T> extends State<TreeView<T>> {
   }
 
   void _handleTap(Node<T> node) {
-    _controller.touchNode(node.key);
+    _controller.selectNode(node.key);
     widget.onNodeTap?.call(node.key);
     setState(() {});
   }

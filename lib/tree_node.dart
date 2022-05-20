@@ -169,7 +169,6 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
     final boxSize = widget.level * TreeView.of<T>(context).widget.indent;
 
     return Column(
-      key: widget.key,
       children: [
         Container(
           height: _height,

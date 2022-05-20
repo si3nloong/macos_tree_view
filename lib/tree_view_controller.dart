@@ -14,14 +14,13 @@ enum InsertMode {
 
 /// The controller for [TreeView].
 class TreeViewController<T> extends ChangeNotifier {
-  final SelectionMode selectionMode;
-
   TreeViewController({
     List<Node<T>>? nodes,
     Set<Key>? initialNodes,
-    this.selectionMode = SelectionMode.single,
+    SelectionMode? selectionMode,
   })  : _nodes = nodes ?? [],
         _selectedNodes = initialNodes ?? {},
+        _selectionMode = selectionMode ?? SelectionMode.single,
         super();
 
   /// The key of the select node in the [TreeView].
@@ -32,9 +31,17 @@ class TreeViewController<T> extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The data for the [TreeView].
+  /// The nodes for the [TreeView].
   List<Node<T>> _nodes;
   List<Node<T>> get nodes => _nodes;
+
+  /// The selection mode for the [TreeView].
+  SelectionMode _selectionMode;
+  SelectionMode get selectionMode => _selectionMode;
+  set selectionMode(SelectionMode value) {
+    _selectionMode = value;
+    notifyListeners();
+  }
 
   /// Creates a copy of this controller but with the given fields
   /// replaced with the new values.
@@ -46,11 +53,15 @@ class TreeViewController<T> extends ChangeNotifier {
   ///   controller.copyWith();
   /// });
   /// ```
-  TreeViewController<T> copyWith(
-      {List<Node<T>>? nodes, Set<Key>? initialNodes}) {
+  TreeViewController<T> copyWith({
+    List<Node<T>>? nodes,
+    Set<Key>? initialNodes,
+    SelectionMode? selectionMode,
+  }) {
     return TreeViewController<T>(
       nodes: nodes ?? _nodes,
       initialNodes: initialNodes ?? _selectedNodes,
+      selectionMode: selectionMode ?? _selectionMode,
     );
   }
 
@@ -73,7 +84,7 @@ class TreeViewController<T> extends ChangeNotifier {
   /// This method expects the user to properly update the state
   ///
   /// ```dart
-  /// setState((){
+  /// setState(() {
   ///   controller = controller.loadFromMap(list: dataMap);
   /// });
   /// ```
@@ -84,174 +95,6 @@ class TreeViewController<T> extends ChangeNotifier {
         .toList();
     return TreeViewController<T>(nodes: treeData);
   }
-
-  /// Adds a new node to an existing node identified by specified key.
-  /// It returns a new controller with the new node added. This method
-  /// expects the user to properly place this call so that the state is
-  /// updated.
-  ///
-  /// See [TreeViewController.addNode] for info on optional parameters.
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withAddNode(key, newNode);
-  /// });
-  /// ```
-  // TreeViewController withAddNode<T>(
-  //   String key,
-  //   Node<T> newNode, {
-  //   Node? parent,
-  //   int? index,
-  //   InsertMode mode = InsertMode.append,
-  // }) {
-  //   List<Node> _data =
-  //       addNode<T>(key, newNode, parent: parent, mode: mode, index: index);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Replaces an existing node identified by specified key with a new node.
-  /// It returns a new controller with the updated node replaced. This method
-  /// expects the user to properly place this call so that the state is
-  /// updated.
-  ///
-  /// See [TreeViewController.updateNode] for info on optional parameters.
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withUpdateNode(key, newNode);
-  /// });
-  /// ```
-  // TreeViewController withUpdateNode<T>(String key, Node<T> newNode,
-  //     {Node? parent}) {
-  //   List<Node> _data = updateNode<T>(key, newNode, parent: parent);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Removes an existing node identified by specified key.
-  /// It returns a new controller with the node removed. This method
-  /// expects the user to properly place this call so that the state is
-  /// updated.
-  ///
-  /// See [TreeViewController.deleteNode] for info on optional parameters.
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withDeleteNode(key);
-  /// });
-  /// ```
-  // TreeViewController withDeleteNode<T>(String key, {Node? parent}) {
-  //   List<Node> _data = deleteNode<T>(key, parent: parent);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Toggles the expanded property of an existing node identified by
-  /// specified key. It returns a new controller with the node toggled.
-  /// This method expects the user to properly place this call so
-  /// that the state is updated.
-  ///
-  /// See [TreeViewController.toggleNode] for info on optional parameters.
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withToggleNode(key, newNode);
-  /// });
-  /// ```
-  // TreeViewController withToggleNode<T>(String key, {Node? parent}) {
-  //   List<Node> _data = toggleNode<T>(key, parent: parent);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Expands all children down to Node identified by specified key.
-  /// It returns a new controller with the children expanded.
-  /// This method expects the user to properly place this call so
-  /// that the state is updated.
-  ///
-  /// Internally uses [TreeViewController.expandToNode].
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withExpandToNode(key, newNode);
-  /// });
-  /// ```
-  // TreeViewController withExpandToNode(String key) {
-  //   List<Node> _data = expandToNode(key);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Collapses all children down to Node identified by specified key.
-  /// It returns a new controller with the children collapsed.
-  /// This method expects the user to properly place this call so
-  /// that the state is updated.
-  ///
-  /// Internally uses [TreeViewController.collapseToNode].
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withCollapseToNode(key, newNode);
-  /// });
-  /// ```
-  // TreeViewController withCollapseToNode(String key) {
-  //   List<Node> _data = collapseToNode(key);
-  //   return TreeViewController(
-  //       // children: _data,
-  //       // selectedKey: selectedKey,
-  //       );
-  // }
-
-  /// Expands all children down to parent Node.
-  /// It returns a new controller with the children expanded.
-  /// This method expects the user to properly place this call so
-  /// that the state is updated.
-  ///
-  /// Internally uses [TreeViewController.expandAll].
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withExpandAll();
-  /// });
-  /// ```
-  // TreeViewController withExpandAll({Node? parent}) {
-  //   List<Node> _data = expandAll(parent: parent);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
-
-  /// Collapses all children down to parent Node.
-  /// It returns a new controller with the children collapsed.
-  /// This method expects the user to properly place this call so
-  /// that the state is updated.
-  ///
-  /// Internally uses [TreeViewController.collapseAll].
-  ///
-  /// ```dart
-  /// setState((){
-  ///   controller = controller.withCollapseAll();
-  /// });
-  /// ```
-  // TreeViewController withCollapseAll({Node? parent}) {
-  //   List<Node> _data = collapseAll(parent: parent);
-  //   return TreeViewController(
-  //     children: _data,
-  //     // selectedKey: selectedKey,
-  //   );
-  // }
 
   /// Gets the node that has a key value equal to the specified key.
   Node<T>? findNode(Key key, {Node<T>? parent}) {
@@ -310,10 +153,16 @@ class TreeViewController<T> extends ChangeNotifier {
   }) {
     _nodes =
         _insertNode(key, newNode, parent: parent, index: index, mode: mode);
+    notifyListeners();
   }
 
-  void touchNode(Key key) {
-    if (selectionMode == SelectionMode.none) {
+  void updateNode(Key key, Node<T> newNode, {Node<T>? parent}) {
+    _nodes = _updateNode(key, newNode, parent: parent);
+    notifyListeners();
+  }
+
+  void selectNode(Key key) {
+    if (_selectionMode == SelectionMode.none) {
       return;
     }
 
@@ -322,13 +171,34 @@ class TreeViewController<T> extends ChangeNotifier {
       return;
     }
 
-    if (selectionMode == SelectionMode.single) {
+    if (_selectionMode == SelectionMode.single) {
       _selectedNodes = {key};
     } else {
       final list = _selectedNodes.toSet();
       list.add(key);
       _selectedNodes = list;
     }
+    final List<Node<T>> ancestors = [];
+    //   String _currentKey = key;
+
+    //   _ancestors.add(_currentKey);
+
+    Node<T>? parent = findParent(key);
+    if (parent != null) {
+      while (parent!.key != key) {
+        key = parent.key;
+        ancestors.add(parent);
+        parent = findParent(key);
+      }
+    }
+    //     TreeViewController _this = this;
+    //     for (var k in _ancestors) {
+    //       Node _node = _this.getNode(k)!;
+    //       Node _updated = _node.copyWith(expanded: true);
+    //       _this = _this.withUpdateNode(k, _updated);
+    //     }
+    //     return _this.value.children;
+    //   }
     notifyListeners();
   }
 
@@ -511,5 +381,5 @@ class TreeViewController<T> extends ChangeNotifier {
   // }
 
   @override
-  String toString() => 'TreeViewController<$T>()';
+  String toString() => 'TreeViewController<$T>(selectionMode: $selectionMode)';
 }
