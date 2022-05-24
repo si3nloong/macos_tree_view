@@ -134,7 +134,8 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
         child: Center(
           child: AnimatedBuilder(
             animation: _controller,
-            child: const Icon(Icons.arrow_forward_ios_rounded, size: 11),
+            child: const Icon(Icons.arrow_forward_ios_rounded,
+                size: 12, color: Colors.white),
             builder: (_, child) {
               return Transform.rotate(
                 angle: _animation.value * 90 * (pi / 180),
@@ -165,7 +166,6 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final boxSize = widget.level * TreeView.of<T>(context).widget.indent;
 
     return Column(
@@ -175,7 +175,7 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
           width: double.infinity,
           decoration: BoxDecoration(
             color:
-                widget.selected ? theme.primaryColor.withOpacity(0.65) : null,
+                widget.selected ? const Color.fromRGBO(0, 122, 255, 1) : null,
             borderRadius: BorderRadius.circular(5),
           ),
           child: GestureDetector(
