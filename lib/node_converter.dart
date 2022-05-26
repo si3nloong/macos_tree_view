@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'node.dart';
+// import 'node.dart';
 
 /// This JsonConverter class holds the toJson/fromJson logic for generic type
 /// fields in our Object that will be de/serialized.
@@ -35,34 +35,20 @@ class NodeConverter<T> implements JsonConverter<T, Object> {
   @override
   T fromJson(Object json) {
     /// start by checking if json is just a single JSON map, not a List
-    if (json is Map<String, dynamic>) {
-      /// now do our custom "inspection" of the JSON map, looking at key names
-      /// to figure out the type of T t. The keys in our JSON will
-      /// correspond to fields of the object that was serialized.
-      return Node.fromJson(json) as T;
-    } else if (json is List) {
-      /// here we handle Lists of JSON maps
-      if (json.isEmpty) {
-        return [] as T;
-      }
+    // if (json is Map<String, dynamic>) {
+    //   /// now do our custom "inspection" of the JSON map, looking at key names
+    //   /// to figure out the type of T t. The keys in our JSON will
+    //   /// correspond to fields of the object that was serialized.
+    //   return Node.fromJson(json) as T;
+    // } else if (json is List) {
+    //   /// here we handle Lists of JSON maps
+    //   if (json.isEmpty) {
+    //     return [] as T;
+    //   }
 
-      // /// Inspect the first element of the List of JSON to determine its Type
-      // final Map<String, dynamic> first = json.first as Map<String, dynamic>;
-      // final bool isOrderItem =
-      //     first.containsKey('status') && first.containsKey('menuItem');
-
-      // if (isOrderItem) {
-      //   return json.map((json) => OrderItem.fromJson(json)).toList() as T;
-      // }
-
-      // final bool isMenuItem =
-      //     first.containsKey('menuId') && first.containsKey('restaurantId');
-
-      // if (isMenuItem) {
-      return json.map((v) => Node.fromJson(v as Map<String, dynamic>)).toList()
-          as T;
-      // }
-    }
+    //   return json.map((v) => Node.fromJson(v as Map<String, dynamic>)).toList()
+    //       as T;
+    // }
 
     /// We didn't recognize this JSON map as one of our model classes, throw an error
     /// so we can add the missing case
@@ -90,7 +76,7 @@ class NodeConverter<T> implements JsonConverter<T, Object> {
   @override
   Object toJson(T object) {
     /// First we'll check if object is Serializable.
-    /// Testing for Serializable type (our custom interface of a class signature
+    /// Nodeing for Serializable type (our custom interface of a class signature
     /// that has a toJson() method) allows us to call toJson() directly on it.
     if (object is JsonSerializable) {
       return object.toJson();

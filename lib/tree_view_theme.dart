@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// import 'expander_theme_data.dart';
 import 'tree_node.dart';
 
 const double _kDefaultLevelPadding = 20;

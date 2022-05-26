@@ -61,54 +61,45 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
     if (_isExpanded) {
       _controller.value = 1.0;
     }
-    _controller.addStatusListener((status) {
-      switch (status) {
-        case AnimationStatus.completed:
-          setState(() {
-            _isExpanded = true;
-          });
-          break;
+    // _controller.addStatusListener((status) {
+    //   switch (status) {
+    //     case AnimationStatus.completed:
+    //       setState(() {
+    //         _isExpanded = true;
+    //       });
+    //       break;
 
-        case AnimationStatus.dismissed:
-          setState(() {
-            _isExpanded = false;
-          });
-          break;
+    //     case AnimationStatus.dismissed:
+    //       setState(() {
+    //         _isExpanded = false;
+    //       });
+    //       break;
 
-        default:
-          setState(() {});
-          break;
-      }
-    });
+    //     default:
+    //       setState(() {});
+    //       break;
+    //   }
+    // });
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   TreeView? _treeView = TreeView.of(context);
-  //   // _controller.duration = _treeView!.theme.expandSpeed;
-  // }
+  @override
+  void didUpdateWidget(TreeNode<T> oldWidget) {
+    if (oldWidget.node.expanded != widget.node.expanded) {
+      _isExpanded = widget.node.expanded;
+      _updateAnimationController();
+    } else if (widget.node != oldWidget.node) {
+      setState(() {});
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
-  // @override
-  // void didUpdateWidget(TreeNode oldWidget) {
-  //   // print(oldWidget);
-  //   // if (widget.node.expanded != oldWidget.node.expanded) {
-  //   //   setState(() {
-  //   //     _isExpanded = widget.node.expanded;
-  //   //     if (_isExpanded) {
-  //   //       _controller.forward();
-  //   //     } else {
-  //   //       _controller.reverse().then<void>((void value) {
-  //   //         if (!mounted) return;
-  //   //         setState(() {});
-  //   //       });
-  //   //     }
-  //   //   });
-  //   // } else if (widget.node != oldWidget.node) {
-  //   //   setState(() {});
-  //   // }
-  //   // super.didUpdateWidget(oldWidget);
-  // }
+  void _updateAnimationController() {
+    if (_isExpanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
 
   @override
   void dispose() {
@@ -119,12 +110,8 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
   Widget _buildExpander() {
     return GestureDetector(
       onTap: () {
-        if (_isExpanded) {
-          _controller.reverse();
-        } else {
-          _controller.forward();
-        }
         _isExpanded = !_isExpanded;
+        _updateAnimationController();
         widget.onExpansionChanged?.call(widget.node, _isExpanded);
       },
       child: Container(
@@ -134,8 +121,8 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
         child: Center(
           child: AnimatedBuilder(
             animation: _controller,
-            child: const Icon(Icons.arrow_forward_ios_rounded,
-                size: 12, color: Colors.white),
+            child: Icon(Icons.arrow_forward_ios_rounded,
+                size: 12, color: widget.node.iconColor),
             builder: (_, child) {
               return Transform.rotate(
                 angle: _animation.value * 90 * (pi / 180),
@@ -174,8 +161,7 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
           height: _height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color:
-                widget.selected ? const Color.fromRGBO(0, 122, 255, 1) : null,
+            color: widget.selected ? widget.node.selectedIconColor : null,
             borderRadius: BorderRadius.circular(5),
           ),
           child: GestureDetector(

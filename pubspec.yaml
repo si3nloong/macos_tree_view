@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  copy_with_extension: ^4.0.2
   freezed_annotation: ^2.0.3
   json_annotation: ^4.5.0
 
@@ -19,6 +20,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   freezed: ^2.0.3+1
   json_serializable: ^6.2.0
+  copy_with_extension_gen: ^4.0.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

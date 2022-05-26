@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '_debug.dart';
-import 'node.dart';
 import 'tree_node.dart';
 import 'tree_view_controller.dart';
 import 'tree_view_theme.dart';
@@ -33,7 +32,7 @@ class TreeView<T> extends StatefulWidget {
 
   /// The expand/collapse handler for a node. Passes the node key and the
   /// expansion state.
-  final void Function(Key, bool)? onExpansionChanged;
+  final void Function(Key, bool)? onNodeExpansionChanged;
 
   /// Custom builder for nodes. Parameters are the build context and tree node.
   final Widget Function(BuildContext, Node<T>)? nodeBuilder;
@@ -83,7 +82,7 @@ class TreeView<T> extends StatefulWidget {
     TreeViewController<T>? controller,
     this.onNodeTap,
     this.onNodeSecondaryTapUp,
-    this.onExpansionChanged,
+    this.onNodeExpansionChanged,
     this.padding = EdgeInsets.zero,
     this.physics,
     this.allowParentSelect = false,
@@ -97,7 +96,7 @@ class TreeView<T> extends StatefulWidget {
   })  :
         // assert(selectionMode == SelectionMode.single && selectedNodes.length < 2),
         controller = controller ?? TreeViewController(),
-        assert(!debugNodesHaveDuplicateKeys<T>(controller!.nodes)),
+        assert(!debugNodesHaveDuplicateKeys<T>(controller!.children)),
         super(key: key);
 
   @override
@@ -113,19 +112,21 @@ class TreeView<T> extends StatefulWidget {
 class _TreeViewState<T> extends State<TreeView<T>> {
   late TreeViewController<T> _controller;
 
-  List<Node<T>> get nodes => _controller.nodes;
-  Set<Key> get selectedNodes => _controller.selectedNodes;
+  List<Node<T>> get nodes => _controller.children;
+  Set<Key> get selectedNodes => _controller.selectedValues;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
+    _controller.addListener(() {
+      setState(() {});
+    });
   }
 
   void _handleTap(Node<T> node) {
     _controller.selectNode(node.key);
     widget.onNodeTap?.call(node.key);
-    setState(() {});
   }
 
   void _handleSecondaryTapUp(Node<T> node, TapUpDetails details) {
@@ -133,7 +134,7 @@ class _TreeViewState<T> extends State<TreeView<T>> {
   }
 
   void _handleExpansionChanged(Node<T> node, bool expanded) {
-    widget.onExpansionChanged?.call(node.key, expanded);
+    widget.onNodeExpansionChanged?.call(node.key, expanded);
   }
 
   @override
@@ -148,8 +149,7 @@ class _TreeViewState<T> extends State<TreeView<T>> {
         itemCount: nodes.length,
         itemBuilder: (context, index) {
           final child = nodes[index];
-          final selected =
-              TreeView.of<T>(context).selectedNodes.contains(child.key);
+          final selected = selectedNodes.contains(child.key);
 
           return TreeNode<T>(
             key: child.key,
@@ -163,7 +163,12 @@ class _TreeViewState<T> extends State<TreeView<T>> {
       );
     }
 
-    return _TreeViewScope(state: this, child: child);
+    print('buildTreeView!');
+
+    return _TreeViewScope(
+      state: this,
+      child: child,
+    );
   }
 }
 
@@ -177,7 +182,9 @@ class _TreeViewScope<T> extends InheritedWidget {
   }) : super(key: key, child: child);
 
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return key != oldWidget.key || child != oldWidget.child;
+  bool updateShouldNotify(covariant _TreeViewScope<T> oldWidget) {
+    return key != oldWidget.key ||
+        state != oldWidget.state ||
+        child != oldWidget.child;
   }
 }
