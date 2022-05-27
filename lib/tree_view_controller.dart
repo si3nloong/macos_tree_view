@@ -424,8 +424,8 @@ class TreeViewController<T> extends ChangeNotifier {
   void expandAll({Key? parent}) {
     _applyToChildren(
         parent: parent,
-        forEach: (child) {
-          child._expanded = true;
+        forEach: (node) {
+          node._expanded = true;
         });
     notifyListeners();
   }
@@ -434,8 +434,8 @@ class TreeViewController<T> extends ChangeNotifier {
   void collapseAll({Key? parent}) {
     _applyToChildren(
         parent: parent,
-        forEach: (child) {
-          child._expanded = false;
+        forEach: (node) {
+          node._expanded = false;
         });
     notifyListeners();
   }
