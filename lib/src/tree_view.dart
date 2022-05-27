@@ -100,16 +100,16 @@ class TreeView<T> extends StatefulWidget {
         super(key: key);
 
   @override
-  State<TreeView<T>> createState() => _TreeViewState<T>();
+  State<TreeView<T>> createState() => TreeViewState<T>();
 
-  static _TreeViewState<T> of<T>(BuildContext context, {bool build = true}) {
+  static TreeViewState<T> of<T>(BuildContext context, {bool build = true}) {
     return build
         ? context.dependOnInheritedWidgetOfExactType<_TreeViewScope<T>>()!.state
         : context.findAncestorWidgetOfExactType<_TreeViewScope<T>>()!.state;
   }
 }
 
-class _TreeViewState<T> extends State<TreeView<T>> {
+class TreeViewState<T> extends State<TreeView<T>> {
   late TreeViewController<T> _controller;
 
   List<Node<T>> get nodes => _controller.children;
@@ -171,7 +171,7 @@ class _TreeViewState<T> extends State<TreeView<T>> {
 }
 
 class _TreeViewScope<T> extends InheritedWidget {
-  final _TreeViewState<T> state;
+  final TreeViewState<T> state;
 
   const _TreeViewScope({
     Key? key,

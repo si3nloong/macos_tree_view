@@ -9,6 +9,7 @@ const int _kExpandSpeed = 130;
 ///
 /// Used by [TreeView] to control the appearance of the sub-widgets
 /// in the [TreeView] widget.
+@immutable
 class TreeViewTheme {
   /// The [ColorScheme] for [TreeView] widget.
   final ColorScheme colorScheme;

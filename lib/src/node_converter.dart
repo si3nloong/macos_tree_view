@@ -84,11 +84,13 @@ class NodeConverter<T> implements JsonConverter<T, Object> {
 
     /// otherwise, check if it's a List & not empty & elements are Serializable
     else if (object is List) {
-      if (object.isEmpty) return [];
-
-      if (object.first is JsonSerializable) {
-        return object.map((t) => t.toJson()).toList();
+      if (object.isEmpty) {
+        return [];
       }
+
+      // if (object.first is JsonSerializable) {
+      //   return object.map((t) => t.toJson()).toList();
+      // }
     }
 
     /// It's not a List & it's not Serializable, this is a design issue

@@ -23,7 +23,6 @@ String _randomString(int len) {
 @IconDataOrNullConverter()
 @JsonSerializable()
 @GenericConverter()
-@immutable
 class Node<T> {
   /// The unique string that identifies this object.
   final Key key;
@@ -138,40 +137,45 @@ class Node<T> {
   /// Whether this [Node] has children.
   bool get hasChildren => _children.isNotEmpty;
 
-  @override
-  int get hashCode {
-    return hashValues(
-      key,
-      _label,
-      _icon,
-      _iconColor,
-      _selectedIconColor,
-      _expanded,
-      _parent,
-      data,
-      hashList(_children),
-    );
-  }
+  // @override
+  // int get hashCode {
+  //   return hashValues(
+  //     key,
+  //     _label,
+  //     _icon,
+  //     _iconColor,
+  //     _selectedIconColor,
+  //     _expanded,
+  //     _parent,
+  //     data,
+  //     hashList(_children),
+  //   );
+  // }
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other.runtimeType != runtimeType) {
-      return false;
-    }
-    return other is Node &&
-        other.key == key &&
-        other.label == label &&
-        other._icon == _icon &&
-        other._iconColor == _iconColor &&
-        other._selectedIconColor == _selectedIconColor &&
-        other._expanded == _expanded &&
-        other._parent == _parent &&
-        other.data == data &&
-        other._children.length == _children.length;
-  }
+  // @override
+  // bool operator ==(Object other) {
+  //   if (identical(this, other)) {
+  //     return true;
+  //   }
+  //   if (other.runtimeType != runtimeType) {
+  //     return false;
+  //   }
+  //   return other is Node &&
+  //       other.key == key &&
+  //       other.label == label &&
+  //       other._icon == _icon &&
+  //       other._iconColor == _iconColor &&
+  //       other._selectedIconColor == _selectedIconColor &&
+  //       other._expanded == _expanded &&
+  //       other._parent == _parent &&
+  //       other.data == data &&
+  //       other._children.length == _children.length;
+  // }
+
+  // @override
+  // // TODO: implement hashCode
+  // int get hashCode => super.hashCode;
+
 }
 
 /// Defines the insertion mode adding a new [Node] to the [TreeView].
@@ -205,11 +209,11 @@ class TreeViewController<T> extends ChangeNotifier {
 
   /// The key of the select node in the [TreeView].
   final Set<Key> _selectedValues;
-  Set<Key> get selectedValues => _selectedValues;
+  Set<Key> get selectedValues => Set.unmodifiable(_selectedValues);
 
   /// The nodes for the [TreeView].
   List<Node<T>> _children;
-  List<Node<T>> get children => _deepCloneNodes(_children);
+  List<Node<T>> get children => List.unmodifiable(_deepCloneNodes(_children));
   set children(List<Node<T>> value) {
     _children = _mapToChildren<T>(null, value);
     notifyListeners();
@@ -472,25 +476,6 @@ class TreeViewController<T> extends ChangeNotifier {
   //   }
   //   return newChildren;
   // }
-
-  List<Node<T>> _mapDescendants(
-      {Node<T>? parent, required Node<T> Function(Node<T>) mapper}) {
-    final List<Node<T>> children = [];
-    final Iterator<Node<T>> iter =
-        parent == null ? _children.iterator : parent.children.iterator;
-    while (iter.moveNext()) {
-      final Node<T> child = iter.current;
-      // if (child.isParent) {
-      //   children.add(child.copyWith(
-      //     expanded: true,
-      //     children: _mapDescendants(parent: child, mapper: mapper),
-      //   ));
-      // } else {
-      //   children.add(child);
-      // }
-    }
-    return children;
-  }
 
   // /// Expands a node and all of the node's ancestors so that the node is
   // /// visible without the need to manually expand each node.
