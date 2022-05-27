@@ -163,8 +163,6 @@ class _TreeViewState<T> extends State<TreeView<T>> {
       );
     }
 
-    print('buildTreeView!');
-
     return _TreeViewScope(
       state: this,
       child: child,

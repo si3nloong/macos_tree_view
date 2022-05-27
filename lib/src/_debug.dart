@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 
-import 'macos_tree_view.dart';
+import 'tree_view_controller.dart';
 
 bool debugNodesHaveDuplicateKeys<T>(Iterable<Node<T>> items) {
   assert(() {

@@ -2,7 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'macos_tree_view.dart';
+import 'tree_view.dart';
+import 'tree_view_controller.dart';
 
 class TreeNode<T> extends StatefulWidget {
   /// The node object used to display the widget state.

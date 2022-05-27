@@ -1,7 +1,22 @@
 name: macos_tree_view
-description: Macos tree view.
+description: >-
+  A treeview for Flutter.
 version: 0.1.0
 repository: https://github.com/si3nloong/macos_tree_view
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        default_package: macos_tree_view
+      ios:
+        default_package: macos_tree_view
+      macos:
+        default_package: macos_tree_view
+      linux:
+        default_package: macos_tree_view
+      windows:
+        default_package: macos_tree_view
 
 environment:
   sdk: ">=2.15.0 <3.0.0"
@@ -25,7 +40,7 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
+# flutter:
   # To add assets to your package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
