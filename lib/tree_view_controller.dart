@@ -123,8 +123,8 @@ class Node<T> {
     );
   }
 
-  /// Whether this [Node] is root.
-  bool get _isRoot => _parent == null;
+  // /// Whether this [Node] is root.
+  // bool get _isRoot => _parent == null;
 
   /// Whether this [Node] has parent.
   bool get hasParent => _parent != null;
@@ -138,20 +138,20 @@ class Node<T> {
   /// Whether this [Node] has children.
   bool get hasChildren => _children.isNotEmpty;
 
-  // @override
-  // int get hashCode {
-  //   return hashValues(
-  //     _key,
-  //     _label,
-  //     _icon,
-  //     _iconColor,
-  //     _selectedIconColor,
-  //     _expanded,
-  //     _parent,
-  //     data,
-  //     hashList(_children),
-  //   );
-  // }
+  @override
+  int get hashCode {
+    return hashValues(
+      key,
+      _label,
+      _icon,
+      _iconColor,
+      _selectedIconColor,
+      _expanded,
+      _parent,
+      data,
+      hashList(_children),
+    );
+  }
 
   @override
   bool operator ==(Object other) {
@@ -362,9 +362,9 @@ class TreeViewController<T> extends ChangeNotifier {
     notifyListeners();
   }
 
-  void mergeNode(Key node, Node<T> newNode) {
-    notifyListeners();
-  }
+  // void mergeNode(Key node, Node<T> newNode) {
+  //   notifyListeners();
+  // }
 
   void selectNode(Key key, {bool ancestorExpanded = false}) {
     if (_selectionMode == SelectionMode.none) {
@@ -411,14 +411,14 @@ class TreeViewController<T> extends ChangeNotifier {
 
   /// Deletes an existing node identified by specified key. This method
   /// returns a new list with the specified node removed.
-  void removeNode(Key key) {
-    // final List<Node<T>> queue = _children;
-    // while (queue.iterator.moveNext()) {
-    //   print(queue.iterator.current);
-    //   // queue.remove(queue.iterator.current);
-    // }
-    notifyListeners();
-  }
+  // void removeNode(Key key) {
+  //   // final List<Node<T>> queue = _children;
+  //   // while (queue.iterator.moveNext()) {
+  //   //   print(queue.iterator.current);
+  //   //   // queue.remove(queue.iterator.current);
+  //   // }
+  //   notifyListeners();
+  // }
 
   /// Expands all node that are children of the parent node parameter. If no parent is passed, uses the root node as the parent.
   void expandAll({Key? parent}) {
