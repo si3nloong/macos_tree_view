@@ -8,7 +8,6 @@ on:
   pull_request:
     branches:
       - main
-      - dev
 
 jobs:
   analyze:
@@ -22,7 +21,7 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
-      - run: pub get
+      - run: dart pub get
       - run: dart analyze
 
   format:
@@ -68,5 +67,5 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
-      - run: pub get
-      - run: pub publish --dry-run
+      - run: dart pub get
+      - run: dart pub publish --dry-run
