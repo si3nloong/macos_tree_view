@@ -1,4 +1,4 @@
-name: Dart CI
+name: Flutter CI
 
 on:
   push:
@@ -14,12 +14,12 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
         with:
-          sdk: stable
-      - run: dart pub get
-      - run: dart analyze
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter analyze
 
   format:
     name: Check formatting
@@ -53,13 +53,13 @@ jobs:
   #     - run: pub get
   #     - run: dart test --chain-stack-traces --platform=${{ matrix.platform }}
 
-  publish-dry-run:
-    name: Publish dry-run
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-      - run: dart pub get
-      - run: dart pub publish --dry-run
+  # publish-dry-run:
+  #   name: Publish dry-run
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: dart-lang/setup-dart@v1
+  #       with:
+  #         sdk: stable
+  #     - run: dart pub get
+  #     - run: dart pub publish --dry-run
