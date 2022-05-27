@@ -13,9 +13,6 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: lib
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1
@@ -59,9 +56,6 @@ jobs:
   publish-dry-run:
     name: Publish dry-run
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: lib
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1
