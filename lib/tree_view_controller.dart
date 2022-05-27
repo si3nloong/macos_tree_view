@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -30,14 +29,15 @@ class Node<T> {
   final Key key;
 
   /// The string value that is displayed on the [TreeNode].
-  final String label;
+  String _label;
+  String get label => _label;
 
   /// An optional icon that is displayed on the [TreeNode].
-  final IconData? _icon;
+  IconData? _icon;
   IconData? get icon => _icon;
 
   /// An optional color that will be applied to the icon for this node.
-  final Color? _iconColor;
+  Color? _iconColor;
   Color? get iconColor => _iconColor;
 
   /// An optional color that will be applied to the icon when this node
@@ -64,14 +64,15 @@ class Node<T> {
 
   Node({
     required this.key,
-    required this.label,
+    required String label,
     IconData? icon,
     Color? iconColor,
     Color? selectedIconColor,
     bool expanded = false,
     List<Node<T>>? children,
     this.data,
-  })  : _icon = icon,
+  })  : _label = label,
+        _icon = icon,
         _iconColor = iconColor,
         _selectedIconColor = selectedIconColor ?? _kDefaultIconColor,
         _expanded = expanded,
@@ -89,7 +90,7 @@ class Node<T> {
   }) {
     return Node(
       key: key ?? this.key,
-      label: label ?? this.label,
+      label: label ?? _label,
       icon: icon ?? _icon,
       iconColor: iconColor ?? _iconColor,
       selectedIconColor: selectedIconColor ?? _selectedIconColor,
@@ -207,8 +208,12 @@ class TreeViewController<T> extends ChangeNotifier {
   Set<Key> get selectedValues => _selectedValues;
 
   /// The nodes for the [TreeView].
-  final List<Node<T>> _children;
+  List<Node<T>> _children;
   List<Node<T>> get children => _deepCloneNodes(_children);
+  set children(List<Node<T>> value) {
+    _children = _mapToChildren<T>(null, value);
+    notifyListeners();
+  }
 
   /// The selection mode for the [TreeView].
   SelectionMode _selectionMode;
@@ -333,6 +338,31 @@ class TreeViewController<T> extends ChangeNotifier {
     } else if (mode == InsertMode.prepend) {
       nodeChildren.insert(0, newNode);
     }
+    notifyListeners();
+  }
+
+  void updateNode(
+    Key key, {
+    String? label,
+    List<Node<T>>? children,
+    bool? expanded,
+    IconData? icon,
+    Color? iconColor,
+  }) {
+    final node = findNode(key);
+    if (node == null) {
+      return;
+    }
+
+    node._label = label ?? node._label;
+    node._children = children ?? node._children;
+    node._expanded = expanded ?? node._expanded;
+    node._icon = icon ?? node._icon;
+    node._iconColor = iconColor ?? node._iconColor;
+    notifyListeners();
+  }
+
+  void mergeNode(Key node, Node<T> newNode) {
     notifyListeners();
   }
 
