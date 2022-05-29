@@ -32,3 +32,33 @@ Map<String, dynamic> _$NodeToJson<T>(Node<T> instance) => <String, dynamic>{
       'children': instance.children,
       'data': GenericConverter<T?>().toJson(instance.data),
     };
+
+TreeViewController<T> _$TreeViewControllerFromJson<T>(
+        Map<String, dynamic> json) =>
+    TreeViewController<T>(
+      selectedValues: (json['selectedValues'] as List<dynamic>?)
+          ?.map((e) => const KeyOrNullConverter().fromJson(e as String))
+          .toSet(),
+      selectionMode:
+          $enumDecodeNullable(_$SelectionModeEnumMap, json['selectionMode']) ??
+              SelectionMode.single,
+      children: (json['children'] as List<dynamic>?)
+          ?.map((e) => Node<T>.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$TreeViewControllerToJson<T>(
+        TreeViewController<T> instance) =>
+    <String, dynamic>{
+      'selectedValues': instance.selectedValues
+          .map(const KeyOrNullConverter().toJson)
+          .toList(),
+      'children': instance.children,
+      'selectionMode': _$SelectionModeEnumMap[instance.selectionMode],
+    };
+
+const _$SelectionModeEnumMap = {
+  SelectionMode.none: 'none',
+  SelectionMode.single: 'single',
+  SelectionMode.multiple: 'multiple',
+};

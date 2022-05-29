@@ -14,6 +14,11 @@ dependencies:
   macos_tree_view: ^0.1.0
 ```
 
+## ❓ Why another tree view?
+
+- Highly performance no matter how nested is your tree.
+- Provided `TreeViewController` for full control on the tree.
+
 ## 🎉 Big Thanks To
 
 Thanks to these awesome companies for their support of Open Source developers ❤
