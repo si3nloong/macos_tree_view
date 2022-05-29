@@ -144,49 +144,26 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
             ),
           ),
         ),
-        // Container(
-        //   height: _height,
-        //   width: double.infinity,
-        //   decoration: BoxDecoration(
-        //     color: widget.node.selected ? widget.node.selectedIconColor : null,
-        //     borderRadius: BorderRadius.circular(5),
-        //   ),
-        //   child: GestureDetector(
-        //     onTap: () {
-        //       widget.node.toggleSelect();
-        //       // TreeView.of<T>(context).handleTap(widget.node);
-        //     },
-        //     onSecondaryTapUp: (details) {
-        //       TreeView.of<T>(context)
-        //           .handleSecondaryTapUp(widget.node, details);
-        //     },
-        //     behavior: HitTestBehavior.translucent,
-        //     child: Row(
-        //       children: [
-        //         if (boxSize <= 0)
-        //           const SizedBox.shrink()
-        //         else
-        //           Container(width: boxSize),
-        //         _buildExpander(),
-        //         Expanded(child: _buildLabel()),
-        //       ],
-        //     ),
-        //   ),
-        // ),
         AnimatedBuilder(
-          animation: _controller,
+          animation: widget.node,
           builder: (context, child) {
-            return ClipRect(
-              child: Align(
-                heightFactor: _animation.value,
-                child: child,
-              ),
-            );
-          },
-          child: AnimatedBuilder(
-            animation: widget.node,
-            builder: (context, child) {
-              return ListView.builder(
+            /// If it's not expanded, we can lazy load it
+            /// to improve the performance
+            if (!widget.node.expanded && _animation.value <= 0) {
+              return const SizedBox.shrink();
+            }
+
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return ClipRect(
+                  child: Align(
+                    heightFactor: _animation.value,
+                    child: child,
+                  ),
+                );
+              },
+              child: ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.node.children.length,
@@ -198,9 +175,9 @@ class _TreeNodeState<T> extends State<TreeNode<T>>
                     node: child,
                   );
                 },
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ],
     );

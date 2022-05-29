@@ -21,6 +21,9 @@ class TreeView<T> extends StatefulWidget {
   /// The controller for the [TreeView]. It manages the data and selected key.
   late final TreeViewController<T> controller;
 
+  /// The scroll controller for [TreeView] widget.
+  final ScrollController? scrollController;
+
   /// The padding of the widget.
   final EdgeInsets? padding;
 
@@ -83,6 +86,7 @@ class TreeView<T> extends StatefulWidget {
   TreeView({
     Key? key,
     TreeViewController<T>? controller,
+    this.scrollController,
     this.onNodeTap,
     this.onNodeSecondaryTapUp,
     this.onNodeExpansionChanged,
@@ -146,6 +150,7 @@ class TreeViewState<T> extends State<TreeView<T>> {
           }
 
           return ListView.builder(
+            controller: widget.scrollController,
             shrinkWrap: widget.shrinkWrap,
             padding: widget.padding,
             primary: widget.primary,
