@@ -40,6 +40,9 @@ class TreeView<T> extends StatefulWidget {
   /// The theme for [TreeView].
   final TreeViewTheme? theme;
 
+  /// The size of [Node] expander icon.
+  final double? iconSize;
+
   /// Determines whether the user can select a parent node. If false,
   /// tapping the parent will expand or collapse the node. If true, the node
   /// will be selected and the use has to use the expander to expand or
@@ -75,7 +78,7 @@ class TreeView<T> extends StatefulWidget {
   final double indent;
 
   /// Specifies the empty placeholder widget to render if the tree is currently empty.
-  final Widget? empty;
+  final Widget empty;
 
   TreeView({
     Key? key,
@@ -85,6 +88,7 @@ class TreeView<T> extends StatefulWidget {
     this.onNodeExpansionChanged,
     this.padding = EdgeInsets.zero,
     this.physics,
+    this.iconSize = 12,
     this.allowParentSelect = false,
     this.supportParentDoubleTap = false,
     this.shrinkWrap = false,
@@ -92,10 +96,8 @@ class TreeView<T> extends StatefulWidget {
     this.primary = true,
     this.indent = 20,
     this.nodeBuilder,
-    this.empty,
-  })  :
-        // assert(selectionMode == SelectionMode.single && selectedNodes.length < 2),
-        controller = controller ?? TreeViewController(),
+    this.empty = const SizedBox.shrink(),
+  })  : controller = controller ?? TreeViewController(),
         assert(!debugNodesHaveDuplicateKeys<T>(controller!.children)),
         super(key: key);
 
@@ -112,60 +114,54 @@ class TreeView<T> extends StatefulWidget {
 class TreeViewState<T> extends State<TreeView<T>> {
   late TreeViewController<T> _controller;
 
-  List<Node<T>> get nodes => _controller.children;
-  Set<Key> get selectedNodes => _controller.selectedValues;
-
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
-    _controller.addListener(() {
-      setState(() {});
-    });
   }
 
-  void _handleTap(Node<T> node) {
+  void handleTap(Node<T> node) {
     _controller.selectNode(node.key);
     widget.onNodeTap?.call(node.key);
   }
 
-  void _handleSecondaryTapUp(Node<T> node, TapUpDetails details) {
+  void handleSecondaryTapUp(Node<T> node, TapUpDetails details) {
     widget.onNodeSecondaryTapUp?.call(node.key, details);
   }
 
-  void _handleExpansionChanged(Node<T> node, bool expanded) {
+  void handleExpansionChanged(Node<T> node, bool expanded) {
     widget.onNodeExpansionChanged?.call(node.key, expanded);
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget child = widget.empty ?? const SizedBox.shrink();
-    if (nodes.isNotEmpty) {
-      child = ListView.builder(
-        shrinkWrap: widget.shrinkWrap,
-        padding: widget.padding,
-        primary: widget.primary,
-        physics: widget.physics,
-        itemCount: nodes.length,
-        itemBuilder: (context, index) {
-          final child = nodes[index];
-          final selected = selectedNodes.contains(child.key);
-
-          return TreeNode<T>(
-            key: child.key,
-            node: child,
-            selected: selected,
-            onTap: _handleTap,
-            onSecondaryTapUp: _handleSecondaryTapUp,
-            onExpansionChanged: _handleExpansionChanged,
-          );
-        },
-      );
-    }
-
     return _TreeViewScope(
       state: this,
-      child: child,
+      child: AnimatedBuilder(
+        animation: _controller.root,
+        builder: (context, child) {
+          final itemCount = _controller.root.children.length;
+          if (itemCount <= 0) {
+            return widget.empty;
+          }
+
+          return ListView.builder(
+            shrinkWrap: widget.shrinkWrap,
+            padding: widget.padding,
+            primary: widget.primary,
+            physics: widget.physics,
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              final child = _controller.root.children[index];
+
+              return TreeNode<T>(
+                key: child.key,
+                node: child,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

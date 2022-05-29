@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -23,15 +24,15 @@ String _randomString(int len) {
 @IconDataOrNullConverter()
 @JsonSerializable()
 @GenericConverter()
-class Node<T> {
+class Node<T> extends Comparable<Node<T>> with ChangeNotifier {
   /// The unique string that identifies this object.
   final Key key;
 
-  /// The string value that is displayed on the [TreeNode].
+  /// The string value that is displayed on the [Node].
   String _label;
   String get label => _label;
 
-  /// An optional icon that is displayed on the [TreeNode].
+  /// An optional icon that is displayed on the [Node].
   IconData? _icon;
   IconData? get icon => _icon;
 
@@ -44,14 +45,25 @@ class Node<T> {
   final Color? _selectedIconColor;
   Color? get selectedIconColor => _selectedIconColor;
 
-  /// The open or closed state of the [TreeNode]. Applicable only if the
+  /// The open or closed state of the [Node]. Applicable only if the
   /// node is a parent
   bool _expanded;
   bool get expanded => _expanded;
 
-  /// Record the parent [TreeNode], for traversal purpose.
+  /// The open or closed state of the [Node]. Applicable only if the
+  /// node is a parent
+  bool _selected;
+  bool get selected => _selected;
+
+  /// Record the parent [Node], for traversal purpose.
+  /// If `null`, this node is the root of the tree
+  /// or it doesn't belong to any [Node] yet.
+  ///
   Node<T>? _parent;
   Node<T>? get parent => _parent;
+
+  /// The nested depth of the [Node].
+  int get depth => isRoot ? 0 : ancestors.length - 1;
 
   /// The sub [Node]s of this object.
   List<Node<T>> _children;
@@ -75,6 +87,7 @@ class Node<T> {
         _iconColor = iconColor,
         _selectedIconColor = selectedIconColor ?? _kDefaultIconColor,
         _expanded = expanded,
+        _selected = false,
         _children = children ?? [];
 
   Node<T> copyWith({
@@ -114,7 +127,7 @@ class Node<T> {
   factory Node.fromLabel(String label,
       {Key? key, T? data, IconData? icon, List<Node<T>>? children}) {
     return Node<T>(
-      key: key ?? Key(_randomString(8)),
+      key: key ?? Key(_randomString(10)),
       label: label,
       data: data,
       icon: icon,
@@ -122,8 +135,116 @@ class Node<T> {
     );
   }
 
-  // /// Whether this [Node] is root.
-  // bool get _isRoot => _parent == null;
+  /// Search the node that has a key value equal to the specified key.
+  Node<T>? findChild(Key key) {
+    final iter = descendants.iterator;
+    Node<T>? found;
+    while (iter.moveNext()) {
+      if (iter.current.key == key) {
+        found = iter.current;
+        break;
+      }
+    }
+    return found;
+  }
+
+  /// Adds a single child to this node and sets its [parent] property to `this`.
+  ///
+  /// If [child]'s `parent != null`, it will be removed from the children of
+  /// it's old parent before being added to this.
+  void addChild(Node<T> child, [InsertMode mode = InsertMode.append]) {
+    _addChild(child);
+    notifyListeners();
+  }
+
+  /// Adds a list of children to this node.
+  void addChildren(Iterable<Node<T>> children) {
+    children.forEach(_addChild);
+    notifyListeners();
+  }
+
+  /// Removes a single child from this node and set its parent to `null`.
+  void removeChild(Key key, {bool recursive = false}) {
+    final child = findChild(key);
+    if (child == null) {
+      return;
+    }
+    if (recursive) {
+      _children.remove(child);
+    } else {
+      _children
+        ..addAll(child._children..forEach((el) => el.._parent = this))
+        ..remove(child);
+    }
+    notifyListeners();
+  }
+
+  void toggleSelect([bool? value]) {
+    if (value == null) {
+      _selected = !_selected;
+    } else {
+      _selected = value;
+    }
+    notifyListeners();
+  }
+
+  void toggleExpand([bool? value]) {
+    if (value == null) {
+      _expanded = !_expanded;
+    } else {
+      _expanded = value;
+    }
+    notifyListeners();
+  }
+
+  void _addChild(Node<T> child) {
+    // assert(child == parent || child == this);
+    // A node can't be neither child of its children nor parent of itself.
+    if (child == parent || child == this) {
+      return;
+    }
+
+    child._parent = this;
+    _children.add(child);
+  }
+
+  /// Returns the path from the root [Node] to this node, not including this.
+  ///
+  /// Example: [root, child, grandChild, ..., this.parent].
+  Iterable<Node<T>> get ancestors sync* {
+    if (parent != null) {
+      yield* parent!.ancestors;
+      yield parent!;
+    }
+  }
+
+  /// Returns an [Iterable] of every [Node] under this.
+  Iterable<Node<T>> get descendants sync* {
+    for (final child in _children) {
+      yield child;
+      if (child.children.isNotEmpty) {
+        yield* child.descendants;
+      }
+    }
+  }
+
+  /// Set this [Node] to sortable
+  @override
+  int compareTo(Node<T> other) => label.compareTo(other.label);
+
+  /// Whether or not this [Node] is the root.
+  bool get isRoot => _parent == null;
+
+  /// Returns the first child of this [Node] or `null` if [children] is empty.
+  Node<T>? get firstChild => _children.isEmpty ? null : _children.first;
+
+  /// Returns the last child of this [Node] or `null` if [children] is empty.
+  Node<T>? get lastChild => _children.isEmpty ? null : _children.last;
+
+  /// Whether or not this [Node] is the last child of its parent.
+  ///
+  /// If this method throws, the tree was malformed.
+  bool get hasNextSibling => isRoot ? !isRoot : this != parent!.lastChild;
 
   /// Whether this [Node] has parent.
   bool get hasParent => _parent != null;
@@ -137,45 +258,9 @@ class Node<T> {
   /// Whether this [Node] has children.
   bool get hasChildren => _children.isNotEmpty;
 
-  // @override
-  // int get hashCode {
-  //   return hashValues(
-  //     key,
-  //     _label,
-  //     _icon,
-  //     _iconColor,
-  //     _selectedIconColor,
-  //     _expanded,
-  //     _parent,
-  //     data,
-  //     hashList(_children),
-  //   );
-  // }
-
-  // @override
-  // bool operator ==(Object other) {
-  //   if (identical(this, other)) {
-  //     return true;
-  //   }
-  //   if (other.runtimeType != runtimeType) {
-  //     return false;
-  //   }
-  //   return other is Node &&
-  //       other.key == key &&
-  //       other.label == label &&
-  //       other._icon == _icon &&
-  //       other._iconColor == _iconColor &&
-  //       other._selectedIconColor == _selectedIconColor &&
-  //       other._expanded == _expanded &&
-  //       other._parent == _parent &&
-  //       other.data == data &&
-  //       other._children.length == _children.length;
-  // }
-
-  // @override
-  // // TODO: implement hashCode
-  // int get hashCode => super.hashCode;
-
+  @override
+  String toString() =>
+      'Node(key: $key, isRoot: $isRoot, depth: $depth, label: $label, expanded: $expanded, selected: $selected)';
 }
 
 /// Defines the insertion mode adding a new [Node] to the [TreeView].
@@ -185,62 +270,80 @@ enum InsertMode {
   insert,
 }
 
-List<Node<T>> _mapToChildren<T>(Node<T>? parent, List<Node<T>> nodes) {
+List<Node<T>> _mapToChildren<T>(
+    Node<T>? parent, int depth, List<Node<T>> nodes) {
   return nodes.map((e) {
     final newClone = e.copyWith();
 
     newClone
       .._parent = parent
-      .._children = _mapToChildren(newClone, newClone._children);
+      .._children = _mapToChildren(newClone, depth + 1, newClone._children);
     return newClone;
   }).toList();
 }
 
 /// The controller for [TreeView].
+@KeyOrNullConverter()
+@JsonSerializable()
 class TreeViewController<T> extends ChangeNotifier {
   TreeViewController({
-    Set<Key>? initialValues,
+    Set<Key>? selectedValues,
     SelectionMode selectionMode = SelectionMode.single,
     List<Node<T>>? children,
-  })  : _selectedValues = initialValues ?? {},
+  })  : assert(selectionMode == SelectionMode.single &&
+            (selectedValues ?? {}).length < 2),
+        _selectedValues = {},
         _selectionMode = selectionMode,
-        _children = _mapToChildren<T>(null, children ?? []),
-        super();
+        // _children = _mapToChildren<T>(null, 0, children ?? []),
+        super() {
+    final root = Node<T>.fromLabel('@root');
+    _root = root.._children = _mapToChildren(root, 0, children ?? []);
+  }
 
   /// The key of the select node in the [TreeView].
-  final Set<Key> _selectedValues;
-  Set<Key> get selectedValues => Set.unmodifiable(_selectedValues);
+  final Set<Node<T>> _selectedValues;
+  Set<Key> get selectedValues =>
+      Set.unmodifiable(_selectedValues.map((e) => e.key));
+
+  late final Node<T> _root;
+  Node<T> get root => _root;
 
   /// The nodes for the [TreeView].
-  List<Node<T>> _children;
-  List<Node<T>> get children => List.unmodifiable(_deepCloneNodes(_children));
-  set children(List<Node<T>> value) {
-    _children = _mapToChildren<T>(null, value);
-    notifyListeners();
-  }
+  // final List<Node<T>> _children;
+  List<Node<T>> get children => List.unmodifiable(_root.children);
+  // set children(List<Node<T>> value) {
+  //   _children = _mapToChildren<T>(null, 0, value);
+  //   notifyListeners();
+  // }
 
   /// The selection mode for the [TreeView].
   SelectionMode _selectionMode;
   SelectionMode get selectionMode => _selectionMode;
   set selectionMode(SelectionMode value) {
     if (value == SelectionMode.none) {
-      _selectedValues.clear();
+      _selectedValues
+        ..forEach((el) => el.toggleSelect(false))
+        ..clear();
     } else if (value == SelectionMode.single && _selectedValues.isNotEmpty) {
       final first = _selectedValues.first;
       _selectedValues
+        ..forEach((el) => el.toggleSelect(false))
         ..clear()
-        ..add(first);
+        ..add(first..toggleSelect(true));
     }
     _selectionMode = value;
     notifyListeners();
   }
 
-  List<Node<T>> _deepCloneNodes(List<Node<T>> nodes) {
-    final List<Node<T>> newNodes = [];
-    for (final node in nodes) {
-      newNodes.add(node.copyWith(children: _deepCloneNodes(node.children)));
+  /// Returns an [Iterable] of every [Node] under this.
+  Iterable<Node<T>> get descendants sync* {
+    for (final child in _root.children) {
+      yield child;
+
+      if (child.children.isNotEmpty) {
+        yield* child.descendants;
+      }
     }
-    return newNodes;
   }
 
   // /// Creates a copy of this controller but with the given fields
@@ -297,22 +400,14 @@ class TreeViewController<T> extends ChangeNotifier {
   //   return TreeViewController<T>(nodes: treeData);
   // }
 
-  /// Gets the node that has a key value equal to the specified key.
-  Node<T>? findNode(Key key, {Node<T>? parent}) {
+  /// Search the node that has a key value equal to the specified key.
+  Node<T>? findNode(Key key) {
+    final iter = _root.descendants.iterator;
     Node<T>? found;
-    final List<Node<T>> children =
-        parent == null ? _children : parent._children;
-    final iter = children.iterator;
     while (iter.moveNext()) {
-      final child = iter.current;
-      if (child.key == key) {
-        found = child;
+      if (iter.current.key == key) {
+        found = iter.current;
         break;
-      } else if (child.hasChildren) {
-        found = findNode(key, parent: child);
-        if (found != null) {
-          break;
-        }
       }
     }
     return found;
@@ -327,55 +422,56 @@ class TreeViewController<T> extends ChangeNotifier {
     Key? parent,
     InsertMode mode = InsertMode.append,
   }) {
-    List<Node<T>> nodeChildren = _children;
     if (parent != null) {
-      /// Set node's parent for referencing purpose.
+      // Set node's parent for referencing purpose.
       final node = findNode(parent);
-      assert(node != null);
-      newNode._parent = node;
-      nodeChildren = node!._children;
-    }
-
-    if (mode == InsertMode.append) {
-      /// If parent not specify, we append it to root node.
-      nodeChildren.add(newNode);
-    } else if (mode == InsertMode.prepend) {
-      nodeChildren.insert(0, newNode);
+      assert(node != null && parent != root.key);
+      node!.addChild(newNode);
+    } else if (mode == InsertMode.append) {
+      // If parent not specify, we append it to root node.
+      _root.addChild(newNode);
     }
     notifyListeners();
   }
 
-  void updateNode(
-    Key key, {
-    String? label,
-    List<Node<T>>? children,
-    bool? expanded,
-    IconData? icon,
-    Color? iconColor,
-  }) {
-    final node = findNode(key);
+  // void updateNode(
+  //   Key key, {
+  //   String? label,
+  //   List<Node<T>>? children,
+  //   bool? expanded,
+  //   IconData? icon,
+  //   Color? iconColor,
+  // }) {
+  //   final node = findNode(key);
+  //   if (node == null) {
+  //     return;
+  //   }
+
+  //   node._label = label ?? node._label;
+  //   node._children = children ?? node._children;
+  //   node._expanded = expanded ?? node._expanded;
+  //   node._icon = icon ?? node._icon;
+  //   node._iconColor = iconColor ?? node._iconColor;
+  //   notifyListeners();
+  // }
+
+  void removeNode(Key key, {bool recursive = false}) {
+    // If no node is found in the tree, should do nothing.
+    final Node<T>? node = findNode(key);
     if (node == null) {
       return;
     }
 
-    node._label = label ?? node._label;
-    node._children = children ?? node._children;
-    node._expanded = expanded ?? node._expanded;
-    node._icon = icon ?? node._icon;
-    node._iconColor = iconColor ?? node._iconColor;
+    node.parent?.removeChild(node.key, recursive: recursive);
     notifyListeners();
   }
-
-  // void mergeNode(Key node, Node<T> newNode) {
-  //   notifyListeners();
-  // }
 
   void selectNode(Key key, {bool ancestorExpanded = false}) {
     if (_selectionMode == SelectionMode.none) {
       return;
     }
 
-    /// If no node is found in the tree, should do nothing.
+    // If no node is found in the tree, should do nothing.
     final Node<T>? node = findNode(key);
     if (node == null) {
       return;
@@ -383,81 +479,77 @@ class TreeViewController<T> extends ChangeNotifier {
 
     if (_selectionMode == SelectionMode.single) {
       _selectedValues
+        ..forEach((el) => el.toggleSelect(false))
         ..clear()
-        ..add(key);
-    } else if (_selectedValues.contains(key)) {
-      _selectedValues.remove(key);
+        ..add(node);
     } else {
-      _selectedValues.add(key);
+      try {
+        final found = _selectedValues.firstWhere(
+            (element) => element.key == node.key,
+            orElse: () => throw Error());
+
+        _selectedValues.remove(found);
+      } catch (e) {
+        _selectedValues.add(node);
+      }
     }
+
+    node.toggleSelect();
 
     /// expanded every parent node until root node
     if (ancestorExpanded) {
-      Node<T>? parent = node._parent;
-      while (parent != null) {
-        parent._expanded = true;
-        parent = parent._parent;
+      final iter = node.ancestors.iterator;
+      while (iter.moveNext()) {
+        iter.current.toggleExpand(true);
       }
     }
     notifyListeners();
   }
 
   /// Toggles an existing node identified by specified key. This method
-  /// returns a new list with the specified node toggled.
+  /// returns a new list with the specified [Node] toggled.
   void toggleNode(Key key) {
-    final Node<T>? node = findNode(key);
+    final node = findNode(key);
     if (node == null) {
       return;
     }
-    node._expanded = !node._expanded;
+    node.toggleExpand();
     notifyListeners();
   }
 
   /// Deletes an existing node identified by specified key. This method
   /// returns a new list with the specified node removed.
   // void removeNode(Key key) {
-  //   // final List<Node<T>> queue = _children;
-  //   // while (queue.iterator.moveNext()) {
-  //   //   print(queue.iterator.current);
-  //   //   // queue.remove(queue.iterator.current);
-  //   // }
+  //   final iter = _root.descendants.iterator;
+  //   while (iter.moveNext()) {
+  //     print(iter.current.key);
+  //   }
   //   notifyListeners();
   // }
 
   /// Expands all node that are children of the parent node parameter. If no parent is passed, uses the root node as the parent.
   void expandAll({Key? parent}) {
-    _applyToChildren(
-        parent: parent,
-        forEach: (node) {
-          node._expanded = true;
-        });
+    final iter = descendants.iterator;
+    while (iter.moveNext()) {
+      iter.current.toggleExpand(true);
+    }
     notifyListeners();
   }
 
   /// Collapses all node that are children of the parent node parameter. If no parent is passed, uses the root node as the parent.
   void collapseAll({Key? parent}) {
-    _applyToChildren(
-        parent: parent,
-        forEach: (node) {
-          node._expanded = false;
-        });
+    final iter = descendants.iterator;
+    while (iter.moveNext()) {
+      iter.current.toggleExpand(false);
+    }
     notifyListeners();
   }
 
   void resetSelection() {
-    _selectedValues.clear();
+    _selectedValues
+      ..forEach((el) => el.toggleSelect(false))
+      ..clear();
     notifyListeners();
-  }
-
-  void _applyToChildren(
-      {Key? parent, required void Function(Node<T>) forEach}) {
-    final node = parent != null ? findNode(parent) : null;
-    final List<Node<T>> queue = node != null ? [node] : _children.toList();
-    while (queue.isNotEmpty) {
-      final node = queue.removeAt(0);
-      forEach(node);
-      queue.addAll(node._children);
-    }
   }
 
   // List<Node<T>> _applyToChildren({Key? parent, required bool expanded}) {
@@ -590,6 +682,18 @@ class TreeViewController<T> extends ChangeNotifier {
   //   return value.children.map((Node child) => child.asMap).toList();
   // }
 
+  /// A necessary factory constructor for creating a new Node instance
+  /// from a map. Pass the map to the generated `_$TreeViewControllerFromJson()` constructor.
+  /// The constructor is named after the source class, in this case, Node.
+  factory TreeViewController.fromJson(Map<String, dynamic> json) =>
+      _$TreeViewControllerFromJson(json);
+
+  /// `toJson` is the convention for a class to declare support for serialization
+  /// to JSON. The implementation simply calls the private, generated
+  /// helper method `_$TreeViewControllerToJson`.
+  Map<String, dynamic> toJson() => _$TreeViewControllerToJson(this);
+
   @override
-  String toString() => 'TreeViewController<$T>()';
+  String toString() =>
+      'TreeViewController<$T>(selectionMode: $selectionMode, nodes: $children, selectedValues: $selectedValues)';
 }
