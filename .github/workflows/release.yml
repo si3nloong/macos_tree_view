@@ -1,0 +1,20 @@
+name: Release CI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Publish a new release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter pub publish --dry-run
+      - run: flutter pub publish
+
+
+
