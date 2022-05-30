@@ -42,9 +42,9 @@ jobs:
   #     matrix:
   #       sdk: [ stable, beta, 2.12.1 ]
   #       platform: [ vm, chrome ]
-  #   defaults:
-  #     run:
-  #       working-directory: lib
+  # #   defaults:
+  # #     run:
+  # #       working-directory: lib
   #   steps:
   #     - uses: actions/checkout@v2
   #     - uses: dart-lang/setup-dart@v1
@@ -53,13 +53,11 @@ jobs:
   #     - run: pub get
   #     - run: dart test --chain-stack-traces --platform=${{ matrix.platform }}
 
-  # publish-dry-run:
-  #   name: Publish dry-run
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: dart-lang/setup-dart@v1
-  #       with:
-  #         sdk: stable
-  #     - run: dart pub get
-  #     - run: dart pub publish --dry-run
+  publish-dry-run:
+    name: Publish dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: k-paxian/dart-package-publisher@master
+        with:
+          accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
