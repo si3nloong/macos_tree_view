@@ -11,7 +11,7 @@ In your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macos_tree_view: ^0.1.0
+  macos_tree_view: ^0.3.0
 ```
 
 ## ❓ Why another tree view?

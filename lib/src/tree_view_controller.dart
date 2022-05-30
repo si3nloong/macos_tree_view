@@ -434,6 +434,20 @@ class TreeViewController<T> extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds a new nodes to an existing node identified by specified key.
+  void addNodes(List<Node<T>> newNodes, {Key? parent}) {
+    if (parent != null) {
+      // Set node's parent for referencing purpose.
+      final node = findNode(parent);
+      assert(node != null && parent != root.key);
+      node!.addChildren(newNodes);
+    } else {
+      // If parent not specify, we append it to root node.
+      _root.addChildren(newNodes);
+    }
+    notifyListeners();
+  }
+
   // void updateNode(
   //   Key key, {
   //   String? label,
