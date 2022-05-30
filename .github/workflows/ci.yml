@@ -42,9 +42,9 @@ jobs:
   #     matrix:
   #       sdk: [ stable, beta, 2.12.1 ]
   #       platform: [ vm, chrome ]
-  # #   defaults:
-  # #     run:
-  # #       working-directory: lib
+  #   defaults:
+  #     run:
+  #       working-directory: lib
   #   steps:
   #     - uses: actions/checkout@v2
   #     - uses: dart-lang/setup-dart@v1
@@ -57,9 +57,8 @@ jobs:
     name: Publish dry-run
     runs-on: ubuntu-latest
     steps:
-      - uses: sakebook/actions-flutter-pub-publisher@v1.4.0
+      - uses: actions/checkout@v3
+      - uses: k-paxian/dart-package-publisher@master
         with:
-          dry_run: true
-          credential: ${{ secrets.CREDENTIAL_JSON }}
-          flutter_package: true
-          # skip_test: true
+          dryRunOnly: true
+          credentialJson: ${{ secrets.CREDENTIAL_JSON }}
