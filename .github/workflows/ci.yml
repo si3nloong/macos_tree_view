@@ -57,10 +57,9 @@ jobs:
     name: Publish dry-run
     runs-on: ubuntu-latest
     steps:
-      - uses: k-paxian/dart-package-publisher@master
+      - uses: sakebook/actions-flutter-pub-publisher@v1.4.0
         with:
-          dryRunOnly: true
-          credentialJson: ${{ secrets.CREDENTIAL_JSON }}
-          # accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
-          # refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
-          # relativePath: lib
+          dry_run: true
+          credential: ${{ secrets.CREDENTIAL_JSON }}
+          flutter_package: true
+          # skip_test: true
