@@ -25,14 +25,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  copy_with_extension: ^4.0.2
+  copy_with_extension: ">=4.0.2 <6.0.0"
   json_annotation: ^4.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: ^2.1.10
-  copy_with_extension_gen: ^4.0.2
+  copy_with_extension_gen: ">=4.0.2 <6.0.0"
   flutter_lints: ^2.0.0
   json_serializable: ^6.2.0
 
